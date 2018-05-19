@@ -1,0 +1,44 @@
+<resources>
+    <string name="app_name">ParentAssistant</string>
+    <string name="api_key"></string>
+    <string name="settings">Settings</string>
+    <string name="account">Account</string>
+    <string name="settings_file">settings</string>
+    <string name="setting_radius">radius</string>
+    <string name="toast_turn_on_internet">Turn on Internet</string>
+    <string name="dialog_cancel">Cancel</string>
+    <string name="dialog_turn_on">Turn on</string>
+    <string name="dialog_turn_on_gps">Turn on GPS</string>
+    <string name="user_data_file">user_data.txt</string>
+    <string-array name="mapTags">
+        <item>photo</item>
+        <item>name</item>
+        <item>age</item>
+        <item>hobbies</item>
+    </string-array>
+    <string name="save_button">Save</string>
+    <string name="search_button">Search</string>
+    <string name="confirm_button">Confirm</string>
+    <string name="radius_text_view">Radius</string>
+    <string name="image_type">image/jpg</string>
+    <string name="add_note_button">Add</string>
+    <string name="description_photo">Your photo</string>
+    <string name="description_close">Close</string>
+    <string name="description_delete_element">Delete element</string>
+    <string name="hint_name_edit_text">Name:</string>
+    <string name="hint_age_edit_text">Age:</string>
+    <string name="hint_hobbies_edit_text">Hobbies:</string>
+    <string name="name_text_view">Name:</string>
+    <string name="age_text_view">Age:</string>
+    <string name="hobbies_text_view">Hobbies:</string>
+    <string name="network_data_file">network_data</string>
+    <string name="alert_request">Request</string>
+    <string name="alert_cancel">Cancel</string>
+    <string name="alert_title">Profile Information</string>
+    <string name="pre_name">Name: </string>
+    <string name="pre_age">Age: </string>
+    <string name="pre_hobby">Hobby: </string>
+    <string name="pre_format">%1$s %2$s</string>
+    <string name="shared_update_account">update</string>
+    <string name="shared_id">id</string>
+</resources>

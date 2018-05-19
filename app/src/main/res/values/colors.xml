@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#1f841a</color>
+    <color name="colorPrimaryDark">#0b4d15</color>
+    <color name="colorAccent">#b31212</color>
+    <color name="add_note_color">#ffffff</color>
+    <color name="floating_button">#ffffff</color>
+    <color name="progress_bar">#ffffff</color>
+    <color name="button">#ffffff</color>
+    <color name="button_add">#cffdcd</color>
+    <color name="info_window_background">#f2f2f2</color>
+</resources>

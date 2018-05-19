@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="last_location_zoom">13</integer>
+    <integer name="location_zoom">16</integer>
+    <integer name="default_circle_radius">100</integer>
+    <integer name="client_circle_radius">8</integer>
+    <integer name="width_line">8</integer>
+    <integer name="width_circle">2</integer>
+    <integer name="width_client_circle">2</integer>
+    <integer name="min_time">500</integer>
+    <integer name="min_distance">0</integer>
+    <integer name="switching_steps">10</integer>
+    <integer name="alert_buttons_weight">10</integer>
+    <integer name="alert_left_margin">30</integer>
+</resources>

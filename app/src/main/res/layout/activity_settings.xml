@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".settings.SettingsActivity">
+    <TextView
+        android:id="@+id/radius"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/radius_text_view"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="15dp" />
+    <SeekBar
+        android:id="@+id/radiusSeekBar"
+        android:layout_width="120dp"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/radius"
+        android:max="1000"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="15dp" />
+    <TextView
+        android:id="@+id/radiusSeekBarProgress"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/radiusSeekBar"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="15dp" />
+    <Button
+        android:id="@+id/radiusConfirmation"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/radiusSeekBarProgress"
+        android:text="@string/confirm_button"
+        android:backgroundTint="@color/button"
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="15dp" />
+</RelativeLayout>
