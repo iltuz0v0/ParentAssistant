@@ -7,6 +7,19 @@
     <color name="floating_button">#ffffff</color>
     <color name="progress_bar">#ffffff</color>
     <color name="button">#ffffff</color>
-    <color name="button_add">#cffdcd</color>
+    <color name="addition_button">#9afc96</color>
+    <color name="addition_button_pressed">#83e27f</color>
     <color name="info_window_background">#f2f2f2</color>
+    <color name="messaging_list_view">#f5f5f5</color>
+    <color name="transparent">#00ffffff</color>
+    <color name="main_activity_foreground">#6450dcdc</color>
+    <color name="outer_circle_stroke">#509646</color>
+    <color name="outer_circle_fill">#195a8c5a</color>
+    <color name="client_circle_stroke">#be1e1e</color>
+    <color name="client_circle_fill">#64dc2828</color>
+    <color name="route_between">#506e32</color>
+    <color name="route_available">#c83732</color>
+    <color name="background">#ffffff</color>
+    <color name="message_text">#000000</color>
+    <color name="messaging_title">#efefef</color>
 </resources>

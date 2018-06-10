@@ -10,6 +10,8 @@ public class OutputAccount {
 
     private Integer companionId;
 
+    private Integer type;
+
     private List<String> names;
 
     private List<String> ages;
@@ -25,6 +27,13 @@ public class OutputAccount {
     private List<Float> peopleLatitudes;
 
     private List<Float> peopleLongitudes;
+
+    private List<String> messages;
+
+    public OutputAccount() {
+    }
+
+
 
     public List<String> getName() {
         return names;
@@ -74,22 +83,6 @@ public class OutputAccount {
         this.peopleIdentifiers = peopleIdentifiers;
     }
 
-    public List<Float> getPeopleLatitudes() {
-        return peopleLatitudes;
-    }
-
-    public void setPeopleLatitudes(List<Float> peopleLatitudes) {
-        this.peopleLatitudes = peopleLatitudes;
-    }
-
-    public List<Float> getPeopleLongitudes() {
-        return peopleLongitudes;
-    }
-
-    public void setPeopleLongitudes(List<Float> peopleLongitudes) {
-        this.peopleLongitudes = peopleLongitudes;
-    }
-
     public Integer getId() {
         return id;
     }
@@ -112,5 +105,67 @@ public class OutputAccount {
 
     public void setCompanionId(Integer companionId) {
         this.companionId = companionId;
+    }
+
+    public List<String> getNames() {
+        return names;
+    }
+
+    public void setNames(List<String> names) {
+        this.names = names;
+    }
+
+    public List<String> getAges() {
+        return ages;
+    }
+
+    public void setAges(List<String> ages) {
+        this.ages = ages;
+    }
+
+    public List<String> getMessages() {
+        return messages;
+    }
+
+    public void setMessages(List<String> messages) {
+        this.messages = messages;
+    }
+
+    public List<Float> getPeopleLatitudes() {
+        return peopleLatitudes;
+    }
+
+    public void setPeopleLatitudes(List<Float> peopleLatitudes) {
+        this.peopleLatitudes = peopleLatitudes;
+    }
+
+    public List<Float> getPeopleLongitudes() {
+        return peopleLongitudes;
+    }
+
+    public void setPeopleLongitudes(List<Float> peopleLongitudes) {
+        this.peopleLongitudes = peopleLongitudes;
+    }
+
+    public void setLists(List<String> names, List<String> ages, List<String> hobbies,
+                         List<String> photos, List<Float> peopleLatitudes,
+                         List<Float> peopleLongitudes, List<Integer> peopleIdentifiers,
+                         List<Integer> peopleStatuses){
+        this.names = names;
+        this.ages = ages;
+        this.hobbies = hobbies;
+        this.photos = photos;
+        this.peopleLatitudes = peopleLatitudes;
+        this.peopleLongitudes = peopleLongitudes;
+        this.peopleIdentifiers = peopleIdentifiers;
+        this.peopleStatuses = peopleStatuses;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
     }
 }

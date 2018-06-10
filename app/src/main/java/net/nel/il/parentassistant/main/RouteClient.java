@@ -6,6 +6,8 @@ import android.os.Message;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.PolyUtil;
 
+import net.nel.il.parentassistant.interfaces.ConnectionStateListener;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -41,12 +43,12 @@ public class RouteClient {
 
     private ExecutorService executor;
 
-    private Handler handler;
-
     public static final int HANDLER_DRAW_ROUTE = 0;
 
-    RouteClient(Handler handler) {
-        this.handler = handler;
+    private ConnectionStateListener connectionStateListener;
+
+    RouteClient(ConnectionStateListener connectionStateListener) {
+        this.connectionStateListener = connectionStateListener;
         executor = Executors.newFixedThreadPool(1);
     }
 
@@ -128,9 +130,6 @@ public class RouteClient {
     }
 
     private void drawRoute(List<List<HashMap<String, String>>> route) {
-        Message message = new Message();
-        message.obj = route;
-        message.what = HANDLER_DRAW_ROUTE;
-        handler.sendMessage(message);
+        connectionStateListener.redirectRouteDrawing(HANDLER_DRAW_ROUTE, route);
     }
 }

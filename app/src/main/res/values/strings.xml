@@ -21,10 +21,12 @@
     <string name="confirm_button">Confirm</string>
     <string name="radius_text_view">Radius</string>
     <string name="image_type">image/jpg</string>
-    <string name="add_note_button">Add</string>
+    <string name="note_addition_button">Add</string>
     <string name="description_photo">Your photo</string>
     <string name="description_close">Close</string>
-    <string name="description_delete_element">Delete element</string>
+    <string name="description_element_deleting">Delete element</string>
+    <string name="description_buggy">Buggy</string>
+    <string name="description_walk">Walk</string>
     <string name="hint_name_edit_text">Name:</string>
     <string name="hint_age_edit_text">Age:</string>
     <string name="hint_hobbies_edit_text">Hobbies:</string>
@@ -34,11 +36,40 @@
     <string name="network_data_file">network_data</string>
     <string name="alert_request">Request</string>
     <string name="alert_cancel">Cancel</string>
+    <string name="alert_ok">OK</string>
     <string name="alert_title">Profile Information</string>
     <string name="pre_name">Name: </string>
     <string name="pre_age">Age: </string>
     <string name="pre_hobby">Hobby: </string>
     <string name="pre_format">%1$s %2$s</string>
+    <string name="pre_message_format">%1$s:%2$s</string>
     <string name="shared_update_account">update</string>
     <string name="shared_id">id</string>
+    <string name="google_identifier">google_identifier</string>
+    <string name="subscriber_doesnt_answer">Абонент не отвечает</string>
+    <string name="subscriber_broke_connection">Абонент разорвал соединение</string>
+    <string name="subscriber_rejected">Абонент отказался</string>
+    <string name="subscriber_not_connection">Проблема со связью</string>
+    <string name="companion_is_offline">Абонент офлайн</string>
+    <string name="busy_request">Busy</string>
+    <string name="not_internet">Not internet</string>
+    <string name="logout">Logout</string>
+    <string name="sign_in">Sign in</string>
+    <string name="walk_type">Choose walk type</string>
+    <string name="is_request">Пришел запрос</string>
+    <string name="accept">Accept</string>
+    <string name="reject">Reject</string>
+    <string name="cancel">Cancel</string>
+    <string name="hint_your_message">   Your message</string>
+    <string name="messages">Messages</string>
+    <string name="send">Send</string>
+    <string name="simple_image_view">Image view</string>
+    <string name="intent_extra_id">id</string>
+    <string name="intent_extra_type">type</string>
+    <string name="notification_request_title">Request</string>
+    <string name="notification_request_text">Request from ...</string>
+    <string name="time">HH:mm</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 </resources>

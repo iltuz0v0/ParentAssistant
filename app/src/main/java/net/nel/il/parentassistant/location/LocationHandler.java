@@ -33,18 +33,18 @@ public class LocationHandler implements LocationListener {
         }
         if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)
                 && amountGPSReplies < switchingSteps) {
-            locationReceiver.sendLocation(getLatLngFromLocation(location));
+            locationReceiver.sendLocation(location);
             amountGPSReplies++;
         } else if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)
                 && amountGPSReplies >= switchingSteps && !isEnabledGPS) {
-            locationReceiver.sendLocation(getLatLngFromLocation(location));
+            locationReceiver.sendLocation(location);
         } else if (location.getProvider().equals(LocationManager.GPS_PROVIDER)
                 && amountGPSReplies == 0) {
             amountGPSReplies = switchingSteps;
         }
         if (location.getProvider().equals(LocationManager.GPS_PROVIDER)
                 && amountGPSReplies >= switchingSteps) {
-            locationReceiver.sendLocation(getLatLngFromLocation(location));
+            locationReceiver.sendLocation(location);
         }
     }
 
@@ -61,10 +61,6 @@ public class LocationHandler implements LocationListener {
     @Override
     public void onProviderDisabled(String s) {
 
-    }
-
-    private LatLng getLatLngFromLocation(Location location) {
-        return new LatLng(location.getLatitude(), location.getLongitude());
     }
 
     private void variablesInitialization(Context context) {

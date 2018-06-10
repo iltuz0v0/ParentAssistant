@@ -8,6 +8,10 @@ public class InputAccount {
 
     private Integer identifier;
 
+    private String googleIdentifier;
+
+    private Integer type;
+
     private Float radius;
 
     private Double lat;
@@ -27,6 +31,10 @@ public class InputAccount {
     private Integer companion_id;
 
     private List<Integer> peopleIdentifiers;
+
+    private String message;
+
+    private Integer messagesAmount;
 
     public InputAccount() {
     }
@@ -135,5 +143,37 @@ public class InputAccount {
 
     public void setCompanion_id(Integer companion_id) {
         this.companion_id = companion_id;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
+    }
+
+    public Integer getMessagesAmount() {
+        return messagesAmount;
+    }
+
+    public void setMessagesAmount(Integer messagesAmount) {
+        this.messagesAmount = messagesAmount;
+    }
+
+    public String getGoogleIdentifier() {
+        return googleIdentifier;
+    }
+
+    public void setGoogleIdentifier(String googleIdentifier) {
+        this.googleIdentifier = googleIdentifier;
+    }
+
+    public Integer getType() {
+        return type;
+    }
+
+    public void setType(Integer type) {
+        this.type = type;
     }
 }

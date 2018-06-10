@@ -2,6 +2,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".main.MainActivity">
@@ -10,6 +11,48 @@
         android:name="com.google.android.gms.maps.MapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+    <LinearLayout
+        android:id="@+id/sign_in_layout"
+        android:elevation="10dp"
+        android:background="@color/background"
+        android:orientation="vertical"
+        android:visibility="invisible"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <TextView
+            android:text="@string/sign_in"
+            android:layout_margin="10dp"
+            android:textSize="20sp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:layout_width="200dp"
+            android:layout_height="wrap_content" />
+        <com.google.android.gms.common.SignInButton
+            android:id="@+id/sign_in_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"/>
+    </LinearLayout>
+    <ImageView
+        android:id="@+id/close"
+        android:visibility="invisible"
+        android:src="@drawable/close"
+        android:layout_gravity="end|top"
+        android:layout_marginTop="5dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/description_close" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/messaging"
+        android:visibility="invisible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="190dp"
+        app:borderWidth="0dp"
+        android:src="@drawable/message"
+        android:backgroundTint="@color/floating_button" />
     <ProgressBar
         android:id="@+id/request_in_progress"
         android:layout_width="140dp"
@@ -18,38 +61,117 @@
         android:visibility="invisible"
         android:indeterminateTint="@color/progress_bar"/>
     <LinearLayout
+        android:id="@+id/walkTypeLayout"
+        android:orientation="vertical"
+        android:visibility="invisible"
+        android:background="@color/background"
+        android:elevation="10dp"
+        android:layout_gravity="center"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <TextView
+            android:text="@string/walk_type"
+            android:textSize="20sp"
+            android:gravity="center"
+            android:layout_margin="10dp"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <ImageButton
+                android:id="@+id/buggy_button"
+                android:layout_margin="10dp"
+                android:elevation="5dp"
+                android:foreground="@drawable/buggy"
+                android:background="@drawable/walk_background"
+                android:layout_width="80dp"
+                android:layout_height="55dp"
+                android:contentDescription="@string/description_buggy" />
+            <ImageButton
+                android:id="@+id/walk_button"
+                android:layout_margin="10dp"
+                android:background="@drawable/walk_background"
+                android:elevation="5dp"
+                android:foreground="@drawable/walk"
+                android:layout_width="80dp"
+                android:layout_height="55dp"
+                android:contentDescription="@string/description_walk" />
+        </LinearLayout>
+    </LinearLayout>
+    <LinearLayout
+        android:elevation="5dp"
         android:id="@+id/is_request_window"
         android:layout_width="wrap_content"
-        android:orientation="horizontal"
+        android:orientation="vertical"
         android:layout_height="wrap_content"
+        android:background="@color/background"
+        android:layout_marginBottom="50dp"
         android:layout_gravity="bottom|center_horizontal"
         android:visibility="invisible">
-        <Button
-            android:id="@+id/accept"
-            android:text="Accept"
-            android:backgroundTint="@color/button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-        <Button
-            android:id="@+id/reject"
-            android:text="Reject"
-            android:backgroundTint="@color/button"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:textSize="20sp"
+                android:text="@string/is_request"
+                android:gravity="center"
+                android:layout_margin="5dp"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content" />
+            <ImageView
+                android:id="@+id/walk_from_image_view"
+                android:layout_gravity="center"
+                android:layout_margin="10dp"
+                android:layout_width="60dp"
+                android:layout_height="45dp"
+                android:contentDescription="@string/description_walk" />
+        </LinearLayout>
+        <LinearLayout
+            android:orientation="horizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <Button
+                android:id="@+id/accept"
+                android:text="@string/accept"
+                android:layout_margin="5dp"
+                android:backgroundTint="@color/button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/reject"
+                android:text="@string/reject"
+                android:layout_margin="5dp"
+                android:backgroundTint="@color/button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
     </LinearLayout>
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/search"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|right"
-        android:layout_marginRight="10dp"
-        android:layout_marginBottom="50dp"
+        android:layout_gravity="bottom|end"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="120dp"
         app:borderWidth="0dp"
         android:backgroundTint="@color/floating_button"
         app:srcCompat="@android:drawable/ic_search_category_default" />
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/location"
+        android:layout_gravity="bottom|end"
+        app:borderWidth="0dp"
+        android:layout_marginEnd="10dp"
+        android:layout_marginBottom="50dp"
+        android:backgroundTint="@color/floating_button"
+        app:srcCompat="@drawable/location"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
     <Button
         android:id="@+id/cancel"
-        android:text="Cancel"
+        android:text="@string/cancel"
         android:backgroundTint="@color/button"
         android:visibility="invisible"
         android:layout_gravity="bottom"

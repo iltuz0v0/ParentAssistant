@@ -11,4 +11,9 @@
         android:title="@string/account"
         app:showAsAction="ifRoom|withText"
         android:icon="@drawable/account"/>
+    <item
+        android:id="@+id/signed_in"
+        android:title="@string/logout"
+        android:orderInCategory="2"
+        app:showAsAction="never" />
 </menu>

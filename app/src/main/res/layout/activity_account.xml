@@ -1,86 +1,112 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".account.AccountActivity">
-    <ListView
-        android:id="@+id/dataList"
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/data_list"
+        android:scrollbarAlwaysDrawVerticalTrack="true"
+        android:scrollbars="vertical"
         android:layout_width="match_parent"
         android:layout_height="match_parent"/>
     <Button
-        android:id="@+id/add_element_button"
-        android:text="@string/add_note_button"
+        android:id="@+id/element_addition_button"
+        android:text="@string/note_addition_button"
         android:layout_gravity="bottom"
-        android:backgroundTint="@color/button_add"
+        android:backgroundTint="@color/addition_button"
         android:elevation="20dp"
         android:textSize="20sp"
         android:layout_width="match_parent"
         android:layout_height="50dp" />
+    <ScrollView
+        android:id="@+id/element_addition_container"
+        android:layout_width="match_parent"
+        android:visibility="invisible"
+        android:layout_height="match_parent">
     <LinearLayout
-        android:id="@+id/add_element_field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="bottom"
-        android:baselineAligned="false"
-        android:visibility="invisible">
+        android:orientation="vertical"
+        android:baselineAligned="false">
         <LinearLayout
             android:layout_weight="5"
-            android:orientation="horizontal"
-            android:layout_width="wrap_content"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content">
+            <ImageButton
+                android:layout_gravity="end|top"
+                android:id="@+id/note_closing_image_button"
+                android:src="@drawable/delete_element"
+                android:contentDescription="@string/description_close"
+                android:backgroundTint="@color/background"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
             <ImageView
-                android:id="@+id/upload_image_view"
-                android:layout_width="96dp"
-                android:layout_height="96dp"
+                android:id="@+id/uploading_image_view"
+                android:layout_gravity="center"
+                android:layout_width="200dp"
+                android:layout_height="200dp"
                 android:src="@drawable/face"
                 android:contentDescription="@string/description_photo" />
         </LinearLayout>
         <LinearLayout
             android:layout_weight="10"
             android:orientation="vertical"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <EditText
                 android:id="@+id/name_edit_text"
-                android:layout_width="100dp"
+                android:minLines="2"
+                android:maxLines="2"
+                android:ems="10"
+                android:layout_width="wrap_content"
+                android:scrollbars="vertical"
+                android:gravity="start|top"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="3dp"
                 android:layout_height="wrap_content"
                 android:inputType="text"
                 android:hint="@string/hint_name_edit_text"/>
             <EditText
                 android:id="@+id/age_edit_text"
-                android:layout_width="100dp"
+                android:layout_width="wrap_content"
+                android:gravity="start|top"
+                android:ems="10"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:inputType="number"
                 android:hint="@string/hint_age_edit_text"/>
             <EditText
                 android:id="@+id/hobbies_edit_text"
-                android:layout_width="100dp"
+                android:ems="10"
+                android:layout_width="wrap_content"
+                android:minLines="2"
+                android:maxLines="3"
+                android:scrollbars="vertical"
+                android:gravity="start|top"
+                android:layout_marginStart="10dp"
+                android:layout_marginTop="3dp"
                 android:layout_height="wrap_content"
-                android:inputType="text"
+                android:inputType="textMultiLine"
                 android:hint="@string/hint_hobbies_edit_text"/>
         </LinearLayout>
         <LinearLayout
             android:layout_weight="3"
             android:orientation="vertical"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content">
-            <ImageButton
-                android:layout_gravity="right|top"
-                android:id="@+id/close_note_image_button"
-                android:src="@drawable/delete_element"
-                android:contentDescription="@string/description_close"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content" />
             <Button
-                android:id="@+id/save_note_button"
+                android:id="@+id/note_saving_button"
                 android:text="@string/save_button"
+                android:paddingLeft="70dp"
+                android:paddingRight="70dp"
+                android:layout_gravity="center_horizontal|bottom"
+                android:backgroundTint="@color/addition_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="5dp"
-                android:layout_marginLeft="5dp"/>
+                android:layout_marginTop="5dp"/>
         </LinearLayout>
     </LinearLayout>
+    </ScrollView>
 </FrameLayout>

@@ -4,6 +4,8 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.location.Location;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Base64;
@@ -11,9 +13,12 @@ import android.util.Base64;
 import com.google.gson.Gson;
 
 import net.nel.il.parentassistant.FileManager;
+import net.nel.il.parentassistant.Messaging.Messaging;
 import net.nel.il.parentassistant.R;
 import net.nel.il.parentassistant.account.AccountDataHandler;
+import net.nel.il.parentassistant.interfaces.ConnectionStateListener;
 import net.nel.il.parentassistant.interfaces.MarkerStateListener;
+import net.nel.il.parentassistant.main.MainActivity;
 import net.nel.il.parentassistant.main.MapManager;
 import net.nel.il.parentassistant.model.InfoAccount;
 import net.nel.il.parentassistant.model.InputAccount;
@@ -29,6 +34,8 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 
 public class NetworkClientMessaging {
 
@@ -36,35 +43,56 @@ public class NetworkClientMessaging {
 
     private MarkerStateListener markerReceiver;
 
-    private Handler handler;
-
     private Context context;
 
-    public static final int REFRESH_MARKER = 1;
+    public static final int MARKER_REFRESHING = 1;
 
-    public static final int ADD_MARKER = 2;
+    public static final int MARKER_ADDITION = 2;
 
-    public static final int DELETE_MARKER = 3;
-
-    private final int STATUS_AVAILABLE = 1;
-
-    private final int STATUS_UNAVAILABLE = 0;
+    public static final int MARKER_DELETING = 3;
 
     private final int NO_IDENTIFIER = -1;
 
-    public NetworkClientMessaging(Context context,
+    static final int SEND_MESSAGE = 13;
+
+    static final int CHAT_REFRESHING = 14;
+
+    private Set<Integer> identifiers;
+
+    private Messaging messaging;
+
+    private boolean isInternet = true;
+
+    private ConnectionStateListener connectionStateListener;
+
+    private final String DEFAULT_OUTPUT_JSON = "{\"id\":3}";
+
+    NetworkClientMessaging(Context context, ConnectionStateListener connectionStateListener,
                                   MarkerStateListener markerReceiver,
-                                  Handler handler) {
+                                  Messaging messaging) {
+        this.connectionStateListener = connectionStateListener;
+        this.messaging = messaging;
         accountDataHandler = new AccountDataHandler(
                 new FileManager(context.getResources()
                         .getString(R.string.user_data_file)));
         this.markerReceiver = markerReceiver;
-        this.handler = handler;
         this.context = context;
+        identifiers = new TreeSet<>();
     }
 
     public OutputAccount sendDataRequest() {
         Location currentLocation = markerReceiver.getLocation();
+        OutputAccount account;
+        if(currentLocation != null) {
+            account = sendDataRequest(currentLocation);
+        }else {
+            account = new OutputAccount();
+            account.setId(NetworkClient.UPDATE);
+        }
+        return account;
+    }
+
+    private OutputAccount sendDataRequest(Location currentLocation){
         OutputAccount account;
         int identifier = getIdentifier();
         boolean isDataUpdated = isUpdated();
@@ -90,6 +118,7 @@ public class NetworkClientMessaging {
         String outputJson = sendHttpRequest(json);
         System.out.println("output json" + outputJson);
         OutputAccount account = translateFromJson(outputJson);
+        getMessages(account);
         if(account.getId() == NetworkClient.CREATE_ACCOUNT){
             saveIdentifier(account.getIdentifier());
         }
@@ -110,10 +139,26 @@ public class NetworkClientMessaging {
         if (id == NetworkClient.CREATE_ACCOUNT || id == NetworkClient.UPDATE) {
             getAccountData(account);
         }
+        if(id == NetworkClient.CREATE_ACCOUNT){
+            getGoogleIdentifier(account);
+        }
         if (id == NetworkClient.GET_DATA) {
+            addMessagesAmount(account);
             getSentPeopleIdentifiers(account);
         }
         return gson.toJson(account);
+    }
+
+    private void addMessagesAmount(InputAccount inputAccount){
+        inputAccount.setMessagesAmount(messaging.getOuterMessagesAmount());
+    }
+
+    private void getMessages(OutputAccount outputAccount){
+        if(outputAccount != null && outputAccount.getMessages() != null &&
+                outputAccount.getMessages().size() > 0) {
+            messaging.addOuterMessages(outputAccount);
+            connectionStateListener.redirectRefreshingChat(CHAT_REFRESHING);
+        }
     }
 
     private OutputAccount translateFromJson(String outputJson) {
@@ -123,16 +168,20 @@ public class NetworkClientMessaging {
 
     private void outputServerData(OutputAccount account) {
         List<Integer> peopleIdentifiers = account.getPeopleIdentifiers();
-        List<Integer> markers = markerReceiver.getPeopleIdentifiers();
+        Set<Integer> list = new TreeSet<>(identifiers);
         for (int element = 0; element < peopleIdentifiers.size(); element++) {
-            if (markers.remove(peopleIdentifiers.get(element))) {
+            if (list.remove(peopleIdentifiers.get(element))) {
                 refreshMarker(element, account, peopleIdentifiers);
             } else {
+                identifiers.add(peopleIdentifiers.get(element));
                 addMarker(element, account, peopleIdentifiers);
             }
         }
-        if (markers.size() > 0) {
-            deleteMarker(markers);
+        if (list.size() > 0) {
+            for(Integer element : list){
+                identifiers.remove(element);
+            }
+            deleteMarker(list);
         }
     }
 
@@ -168,8 +217,7 @@ public class NetworkClientMessaging {
     }
 
     private void getSentPeopleIdentifiers(InputAccount account) {
-        List<Integer> identifiers = getPeopleIdentifiers();
-        account.setPeopleIdentifiers(identifiers);
+        account.setPeopleIdentifiers(new ArrayList<Integer>(identifiers));
     }
 
     private String encodeBitmap(Bitmap bitmap) {
@@ -190,6 +238,15 @@ public class NetworkClientMessaging {
         return preferences.getInt(context.getString(R.string.shared_id), NO_IDENTIFIER);
     }
 
+    private void getGoogleIdentifier(InputAccount account) {
+        SharedPreferences preferences = context.getSharedPreferences(
+                context.getResources().getString(R.string.network_data_file),
+                Context.MODE_PRIVATE);
+        String googleIdentifier = preferences.getString(context
+                .getString(R.string.google_identifier), "-1");
+        account.setGoogleIdentifier(googleIdentifier);
+    }
+
     private boolean isUpdated() {
         SharedPreferences preferences = context.getSharedPreferences(
                 context.getResources().getString(R.string.network_data_file),
@@ -203,11 +260,16 @@ public class NetworkClientMessaging {
         return result;
     }
 
-    private List<Integer> getPeopleIdentifiers() {
-        return markerReceiver.getPeopleIdentifiers();
-    }
-
     private String sendHttpRequest(final String json) {
+        if(!hasInternetConnection(context)){
+            if(isInternet) {
+                isInternet = false;
+                connectionStateListener.redirectOperation(NetworkClient.NO_INTERNET);
+            }
+            return DEFAULT_OUTPUT_JSON;
+        }else{
+            isInternet = true;
+        }
         final StringBuilder outputJson = new StringBuilder();
         BufferedReader reader = null;
         BufferedOutputStream writer = null;
@@ -253,26 +315,50 @@ public class NetworkClientMessaging {
         return outputJson.toString();
     }
 
-    public void requestTo(int id, int companionId) {
-        String json = translateToMinJSON(id, companionId);
+    public void requestTo(int id, int companionId, int type) {
+        String json = translateToMinJSON(id, companionId, type);
+        System.out.println("REQUEST_TO: " + json);
         sendHttpRequest(json);
+        connectionStateListener.redirectClearingMessages(NetworkClient.CLEAR_MESSAGES);
     }
 
     public void acceptTo(int id, int companionId) {
+        System.out.println("accept to");
         String json = translateToMinJSON(id, companionId);
         sendHttpRequest(json);
     }
 
     public void rejectTo(int id, int companionId) {
+        System.out.println("reject to");
         String json = translateToMinJSON(id, companionId);
-        System.out.println("JISON2 " + json);
+        sendHttpRequest(json);
+    }
+
+    public void doNoConnectionTo(int id, int companionId) {
+        String json = translateToMinJSON(id, companionId);
         sendHttpRequest(json);
     }
 
     public void breakTo(int id, int companionId) {
+        System.out.println("break to");
         String json = translateToMinJSON(id, companionId);
-        System.out.println("JISON" + json);
         sendHttpRequest(json);
+    }
+
+    public void sendMessage(String message, int companionId){
+        System.out.println("send message");
+        String json = translateToMessageJSON(message, companionId);
+        sendHttpRequest(json);
+    }
+
+    private String translateToMessageJSON(String message, int companionId) {
+        Gson gson = new Gson();
+        InputAccount account = new InputAccount();
+        account.setId(SEND_MESSAGE);
+        account.setMessage(message);
+        account.setIdentifier(getIdentifier());
+        account.setCompanion_id(companionId);
+        return gson.toJson(account);
     }
 
     private String translateToMinJSON(int id, int companionId) {
@@ -281,6 +367,24 @@ public class NetworkClientMessaging {
         account.setId(id);
         account.setIdentifier(getIdentifier());
         account.setCompanion_id(companionId);
+        return gson.toJson(account);
+    }
+
+    private String translateToMinJSON(int id, int companionId, int type) {
+        Gson gson = new Gson();
+        InputAccount account = new InputAccount();
+        account.setId(id);
+        account.setIdentifier(getIdentifier());
+        account.setCompanion_id(companionId);
+        account.setType(type);
+        return gson.toJson(account);
+    }
+
+    private String translateToMinJSON(int id) {
+        Gson gson = new Gson();
+        InputAccount account = new InputAccount();
+        account.setId(id);
+        account.setIdentifier(getIdentifier());
         return gson.toJson(account);
     }
 
@@ -294,45 +398,57 @@ public class NetworkClientMessaging {
 
     private void refreshMarker(int element, OutputAccount account,
                                List<Integer> peopleIdentifiers) {
-        Message message = handler.obtainMessage();
-        message.what = REFRESH_MARKER;
-        message.obj = new InfoAccount(peopleIdentifiers.get(element),
-                account.getPeopleLatitudes().get(element),
-                account.getPeopleLongitudes().get(element),
-                account.getPeopleStatuses().get(element));
-        handler.sendMessage(message);
+        connectionStateListener.redirectMarkerRefreshing(MARKER_REFRESHING,
+                new InfoAccount(peopleIdentifiers.get(element),
+                        account.getPeopleLatitudes().get(element),
+                        account.getPeopleLongitudes().get(element),
+                        account.getPeopleStatuses().get(element)));
     }
 
     private void addMarker(int element, OutputAccount account,
                            List<Integer> peopleIdentifiers) {
-        Message message = handler.obtainMessage();
-        message.what = ADD_MARKER;
-        InfoAccount infoAccount;
-        if(account.getName().size() > element){
-            infoAccount = new InfoAccount(peopleIdentifiers.get(element),
-                    account.getName().get(element),
-                    account.getAge().get(element),
-                    account.getHobbies().get(element),
-                    account.getPhotos().get(element),
-                    account.getPeopleLatitudes().get(element),
-                    account.getPeopleLongitudes().get(element),
-                    account.getPeopleStatuses().get(element));
-        }
-        else{
-            infoAccount = new InfoAccount(peopleIdentifiers.get(element),
-                    "name", "age", "hobby", "photo",
-                    account.getPeopleLatitudes().get(element),
-                    account.getPeopleLongitudes().get(element),
-                    account.getPeopleStatuses().get(element));
-        }
-        message.obj = infoAccount;
-        handler.sendMessage(message);
+        connectionStateListener.redirectMarkerAddition(MARKER_ADDITION,
+                new InfoAccount(peopleIdentifiers.get(element),
+                        account.getName().get(element),
+                        account.getAge().get(element),
+                        account.getHobbies().get(element),
+                        account.getPhotos().get(element),
+                        account.getPeopleLatitudes().get(element),
+                        account.getPeopleLongitudes().get(element),
+                        account.getPeopleStatuses().get(element)));
     }
 
-    private void deleteMarker(List<Integer> markers) {
-        Message message = handler.obtainMessage();
-        message.what = DELETE_MARKER;
-        message.obj = markers;
-        handler.sendMessage(message);
+    private void deleteMarker(Set<Integer> markers) {
+        connectionStateListener.redirectMarkerDeleting(MARKER_DELETING,
+                markers);
     }
+
+    public void timeExceed(int id, int companionId){
+        System.out.println("time exceed");
+        String json = translateToMinJSON(id, companionId);
+        sendHttpRequest(json);
+    }
+
+    public void sendFirstRequest(int id){
+        System.out.println("first request");
+        if(getIdentifier() != NO_IDENTIFIER) {
+            String json = translateToMinJSON(id);
+            sendHttpRequest(json);
+        }
+    }
+
+    private boolean hasInternetConnection(Context context) {
+        boolean connection = false;
+        ConnectivityManager connectivity = (ConnectivityManager) context.getSystemService(MainActivity.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivity.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        if (networkInfo != null && networkInfo.isConnected()) {
+            connection = true;
+        }
+        networkInfo = connectivity.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (networkInfo != null && networkInfo.isConnected()) {
+            connection = true;
+        }
+        return connection;
+    }
+
 }

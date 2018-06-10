@@ -14,8 +14,10 @@ public class ProvidersService {
 
     public boolean trackGPS(Activity context, LocationManager locationManager) {
         boolean tracing = false;
+        System.out.println(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
                 && MainActivity.isPermissionLocation) {
+            System.out.println("WTF");
             new AlertDialogService().createGPSRequest(context);
         } else if (MainActivity.isPermissionLocation) {
             tracing = true;

@@ -26,6 +26,7 @@ public class FileManager {
         return file.exists();
     }
 
+    @SuppressWarnings("all")
     private boolean createInternalFile(Context context, String filename) {
         boolean result = false;
         File file = new File(context.getFilesDir().getAbsolutePath() + "/" + filename);

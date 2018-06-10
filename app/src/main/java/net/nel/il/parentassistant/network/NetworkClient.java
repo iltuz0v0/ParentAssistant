@@ -4,8 +4,14 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 
+import net.nel.il.parentassistant.Messaging.Messaging;
+import net.nel.il.parentassistant.interfaces.ConnectionStateListener;
 import net.nel.il.parentassistant.interfaces.MarkerStateListener;
 import net.nel.il.parentassistant.model.OutputAccount;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NetworkClient implements Runnable {
 
@@ -31,6 +37,20 @@ public class NetworkClient implements Runnable {
 
     private static final int BREAK_FROM = 10;
 
+    private static final int TIME_OUTSIDE_TO = 11;
+
+    private static final int FIRST_REQUEST_TO = 12;
+
+    public static final int BUSY = 15;
+
+    public static final int BUSY_REQUEST = 17;
+
+    public static final int NO_CONNECTION = 19;
+
+    public static final int CLEAR_MESSAGES = 20;
+
+    public static final int NO_INTERNET = 21;
+
     private boolean beginRequestTo = false;
 
     private final int NO_REQUEST = -1;
@@ -43,9 +63,9 @@ public class NetworkClient implements Runnable {
 
     private Thread thread;
 
-    private long requestDelay = 4000;
+    private long checkDelay = 4000;
 
-    private Handler handler;
+    private long requestDelay = 10000;
 
     private boolean routingFrom = false;
 
@@ -67,21 +87,47 @@ public class NetworkClient implements Runnable {
 
     public static final int IS_REQUEST_FROM = 9;
 
-    public static final int REMOVE_ROUTE = 10;
+    public static final int ROUTE_REMOVING = 10;
 
-    public static final int REBUILD_ROUTE = 11;
+    public static final int ROUTE_REBUILDING = 11;
 
-    private final int WAITING_TICKS = 10;
+    private final int WAITING_TICKS = 4;
 
     private final int ACCEPTED = 1;
 
     private final int REJECTED = 0;
 
-    public NetworkClient(Context context, MarkerStateListener markerReceiver,
-                         Handler handler) {
+    public static final int COMPANION_IS_OFFLINE = 13;
+
+    private boolean closed = false;
+
+    private List<String> messages;
+
+    private Messaging messaging;
+
+    private final Object messagingBlock;
+
+    private ConnectionStateListener connectionStateListener;
+
+    private boolean isConnection = true;
+
+    private int type;
+
+    private RequestTo requestTo;
+
+    private RequestFrom requestFrom;
+
+
+    public NetworkClient(Context context, ConnectionStateListener connectionStateListener,
+                         MarkerStateListener markerReceiver, Messaging messaging) {
+        requestTo = new RequestTo();
+        requestFrom = new RequestFrom();
+        this.messaging = messaging;
+        this.connectionStateListener = connectionStateListener;
         networkClientMessaging = new NetworkClientMessaging(context,
-                markerReceiver, handler);
-        this.handler = handler;
+                connectionStateListener, markerReceiver, messaging);
+        messagingBlock = new Object();
+        messages = new ArrayList<>();
     }
 
     public void startNetworkClient() {
@@ -89,47 +135,58 @@ public class NetworkClient implements Runnable {
         thread.start();
     }
 
-    // do request
-    public void setBeginRequestTo(boolean beginRequestTo, int companionId) {
+    @SuppressWarnings("all")
+    public void setBeginRequestTo(boolean beginRequestTo, int companionId, int type) {
         this.beginRequestTo = beginRequestTo;
         this.companionId = companionId;
+        this.type = type;
     }
 
 
-    // finish request
     public void setEndRequestTo() {
         beginRequestTo = false;
     }
 
-    // accept request
     public void setAccept() {
-        answer = 1;
+        answer = ACCEPTED;
     }
 
-    // reject request
     public void setReject() {
-        answer = 0;
+        answer = REJECTED;
     }
 
-    // finish request from another person
+    public void setReject(boolean isConnection) {
+        this.isConnection = isConnection;
+        answer = REJECTED;
+    }
+
     public void setEndRequestFrom() {
         endRequestFrom = true;
-        handler.sendEmptyMessage(REMOVE_ROUTE);
+        connectionStateListener.redirectRemovingRoute(ROUTE_REMOVING);
     }
 
 
     @Override
+    @SuppressWarnings("all")
     public void run() {
+        boolean firstRequest =  false;
         OutputAccount account;
         while (true) {
+            handleMessaging();
+            if(!firstRequest){
+                networkClientMessaging.sendFirstRequest(FIRST_REQUEST_TO);
+                firstRequest = true;
+            }
+            finishRequest();
             account = networkClientMessaging.sendDataRequest();
-            System.out.println("Runnable: id " + account.getId());
             long beginTime = System.currentTimeMillis();
-            while (System.currentTimeMillis() - beginTime <= requestDelay) {
+            while (System.currentTimeMillis() - beginTime <= checkDelay) {
+                finishRequest();
                 handleRequestTo(account);
+                finishRequest();
                 handleRequestFrom(account);
                 try {
-                    Thread.sleep(10000);
+                    Thread.sleep(requestDelay);
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
@@ -139,85 +196,160 @@ public class NetworkClient implements Runnable {
 
     private void handleRequestTo(OutputAccount account) {
         if (beginRequestTo) {
-            if (requestAmount == 0) {
-                requestTo();
-            }
-            requestAmount++;
-            if (account.getId() == ACCEPT_FROM) {
-                handler.sendEmptyMessage(REQUEST_ACCEPTED);
-                routingFrom = true;
-            }
-            if (account.getId() == REJECT_FROM) {
-                handler.sendEmptyMessage(REQUEST_REJECTED);
-                resetVariablesTo();
-            }
-            if (account.getId() == BREAK_FROM) {
-                handler.sendEmptyMessage(REQUEST_BROKEN);
-                handler.sendEmptyMessage(REMOVE_ROUTE);
-                resetVariablesTo();
-            }
-            if (requestAmount > WAITING_TICKS && !routingFrom) {
-                handler.sendEmptyMessage(TIME_EXCEED);
-                resetVariablesTo();
-            }
-            if (routingFrom) {
-                rebuildRoute(companionId);
-            }
+            requestTo.doRequestTo();
+            requestTo.acceptFrom(account);
+            requestTo.rejectFrom(account);
+            requestTo.doNoConnection(account);
+            requestTo.breakFrom(account);
+            requestTo.doBusyFrom(account);
+            requestTo.timeExceed();
+            requestTo.rebuildRoute(account);
         } else {
-            if (requestAmount != 0) {
-                handler.sendEmptyMessage(REMOVE_ROUTE);
-                breakTo();
-                resetVariablesTo();
-            }
+            requestTo.breakTo();
         }
     }
 
     private void handleRequestFrom(OutputAccount account) {
-        if (account.getId() == REQUEST_FROM) {
-            isRequestFrom = true;
-            if (companionId == NO_REQUEST) {
-                doIsRequestFrom(account);
+        requestFrom.doRequestFrom(account);
+        requestFrom.rejectTo();
+        requestFrom.acceptTo();
+        requestFrom.breakTo();
+        requestFrom.rebuildRoute(account);
+        requestFrom.breakFrom(account);
+    }
+
+    private class RequestTo{
+
+        void doRequestTo(){
+            if (requestAmount == 0) {
+                networkClientMessaging.requestTo(REQUEST_TO, companionId, type);
             }
-            companionId = account.getCompanionId();
+            requestAmount++;
         }
-        if (answer == REJECTED) {
-            rejectTo();
-            resetVariablesFrom();
-        }
-        if (answer == ACCEPTED) {
-            answer = -1;
-            routingTo = true;
-            acceptTo();
-        }
-        if (endRequestFrom) {
-            endRequestFrom = false;
-            breakTo();
-            resetVariablesFrom();
-        }
-        if (routingTo) {
-                rebuildRoute(companionId);
-        }
-        if (account.getId() == BREAK_FROM) {
-            if (isRequestFrom) {
-                handler.sendEmptyMessage(REQUEST_BROKEN);
-                handler.sendEmptyMessage(REMOVE_ROUTE);
+
+        void acceptFrom(OutputAccount account){
+            if (account.getId() == ACCEPT_FROM) {
+                connectionStateListener.redirectOperation(REQUEST_ACCEPTED);
+                routingFrom = true;
             }
-            resetVariablesFrom();
+        }
+
+        void rejectFrom(OutputAccount account){
+            if (account.getId() == REJECT_FROM) {
+                connectionStateListener.redirectOperation(REQUEST_REJECTED);
+                resetVariablesTo();
+            }
+        }
+
+        void doNoConnection(OutputAccount account){
+            if(account.getId() == NO_CONNECTION){
+                connectionStateListener.redirectOperation(NO_CONNECTION);
+                resetVariablesTo();
+            }
+        }
+
+        void breakFrom(OutputAccount account){
+            if (account.getId() == BREAK_FROM) {
+                connectionStateListener.redirectOperation(REQUEST_BROKEN);
+                connectionStateListener.redirectRemovingRoute(ROUTE_REMOVING);
+                resetVariablesTo();
+            }
+        }
+
+        void doBusyFrom(OutputAccount account){
+            if(account.getId() == BUSY){
+                connectionStateListener.redirectOperation(BUSY_REQUEST);
+                resetVariablesTo();
+            }
+        }
+
+        void timeExceed(){
+            if (requestAmount > WAITING_TICKS && !routingFrom) {
+                connectionStateListener.redirectOperation(TIME_EXCEED);
+                networkClientMessaging.timeExceed(TIME_OUTSIDE_TO, companionId);
+                resetVariablesTo();
+            }
+        }
+
+        void rebuildRoute(OutputAccount account){
+            if (routingFrom) {
+                if(account.getId() != BREAK_FROM) {
+                    connectionStateListener.redirectRebuildingRoute(ROUTE_REBUILDING,
+                            companionId);
+
+                }
+            }
+        }
+
+        void breakTo(){
+            if (requestAmount != 0) {
+                connectionStateListener.redirectRemovingRoute(ROUTE_REMOVING);
+                networkClientMessaging.breakTo(BREAK_TO, companionId);
+                resetVariablesTo();
+            }
         }
     }
 
-    private void rebuildRoute(int companionId){
-        Message message = handler.obtainMessage();
-        message.what = REBUILD_ROUTE;
-        message.arg1 = companionId;
-        handler.sendMessage(message);
-    }
+    private class RequestFrom{
 
-    private void doIsRequestFrom(OutputAccount account){
-        Message message = handler.obtainMessage();
-        message.what = IS_REQUEST_FROM;
-        message.arg1 = account.getCompanionId();
-        handler.sendMessage(message);
+        void doRequestFrom(OutputAccount account){
+            if (account.getId() == REQUEST_FROM) {
+                isRequestFrom = true;
+                if (companionId == NO_REQUEST) {
+                    connectionStateListener.redirectIsRequestFrom(IS_REQUEST_FROM,
+                            account.getCompanionId(), account.getType());
+                }
+                companionId = account.getCompanionId();
+            }
+        }
+
+        void rejectTo(){
+            if (answer == REJECTED && !isConnection) {
+                isConnection = true;
+                networkClientMessaging.doNoConnectionTo(NO_CONNECTION, companionId);
+                resetVariablesFrom();
+            }
+            else if (answer == REJECTED) {
+                networkClientMessaging.rejectTo(REJECT_TO, companionId);
+                resetVariablesFrom();
+            }
+        }
+
+        void acceptTo(){
+            if (answer == ACCEPTED) {
+                answer = -1;
+                routingTo = true;
+                networkClientMessaging.acceptTo(ACCEPT_TO, companionId);
+            }
+        }
+
+        void breakTo(){
+            if (endRequestFrom) {
+                endRequestFrom = false;
+                networkClientMessaging.breakTo(BREAK_TO, companionId);
+                resetVariablesFrom();
+            }
+        }
+
+        void rebuildRoute(OutputAccount account){
+            if (routingTo) {
+                if(account.getId() != BREAK_FROM) {
+                    connectionStateListener.redirectRebuildingRoute(ROUTE_REBUILDING,
+                            companionId);
+
+                }
+            }
+        }
+
+        void breakFrom(OutputAccount account){
+            if (account.getId() == BREAK_FROM) {
+                if (isRequestFrom) {
+                    connectionStateListener.redirectOperation(REQUEST_BROKEN);
+                    connectionStateListener.redirectRemovingRoute(ROUTE_REMOVING);
+                }
+                resetVariablesFrom();
+            }
+        }
     }
 
     private void resetVariablesTo() {
@@ -234,27 +366,52 @@ public class NetworkClient implements Runnable {
         isRequestFrom = false;
     }
 
-    private void requestTo() {
-        networkClientMessaging.requestTo(REQUEST_TO, companionId);
-    }
-
-    private void acceptTo() {
-        networkClientMessaging.acceptTo(ACCEPT_TO, companionId);
-    }
-
-    private void rejectTo() {
-        networkClientMessaging.rejectTo(REJECT_TO, companionId);
-    }
-
-    private void breakTo() {
-        networkClientMessaging.breakTo(BREAK_TO, companionId);
-    }
-
     public boolean isBeginRequestTo() {
         return beginRequestTo;
     }
 
     public boolean isEndRequestFrom() {
         return endRequestFrom;
+    }
+
+    private void setClose(){
+        networkClientMessaging.timeExceed(TIME_OUTSIDE_TO, companionId);
+        resetVariablesTo();
+        connectionStateListener.redirectRemovingRoute(ROUTE_REMOVING);
+    }
+
+    public void close(){
+        closed = true;
+    }
+
+    private void finishRequest(){
+        if(closed){
+            setClose();
+            closed = false;
+        }
+    }
+
+    public void setSendMessage(String message){
+        synchronized (messagingBlock) {
+            messages.add(message);
+        }
+    }
+
+    @SuppressWarnings("all")
+    private void handleMessaging(){
+        List<String> msgs = null;
+        synchronized (messagingBlock) {
+            if (messages.size() > 0) {
+                msgs = new ArrayList<>();
+                msgs.addAll(messages);
+                messages.clear();
+            }
+        }
+        if(msgs != null) {
+            for (int element = 0; element < msgs.size(); element++) {
+                networkClientMessaging.sendMessage(msgs.get(element),
+                        companionId);
+            }
+        }
     }
 }

@@ -18,16 +18,11 @@ import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class AccountDataHandler {
 
-    private final String EMPTY = "";
-
-    private final String SPACE = " ";
-
-    private final String DOUBLE_SPACE = "  ";
-
-    private Bitmap uploadedBitmap = null;
+    public Bitmap uploadedBitmap = null;
 
     private String bitmapName;
 
@@ -41,22 +36,50 @@ public class AccountDataHandler {
 
     private final int QUALITY_COMPRESS = 50;
 
-    private final String NULL = "null";
+    private final String DEFAULT_VALUE = "null";
+
+    private final String EMPTY = "";
+
+    private final String SPACE = " ";
+
+    private final String DOUBLE_SPACE = "  ";
+
+    private final static int ACCOUNT_FIELDS_AMOUNT = 4;
 
     public AccountDataHandler(FileManager fileManager) {
         data = new ArrayList<>();
         this.fileManager = fileManager;
     }
 
+    public List<Note>getData(Context context, String[] mapTags){
+        List<Note> notes = new ArrayList<>();
+        ArrayList<HashMap<String, Object>> data = handleData(context, mapTags);
+        for(HashMap<String, Object> dataElement : data){
+            int index = 0;
+            Note note = new Note();
+            note.deletingResource = R.drawable.delete_element;
+            note.photo = (Bitmap) dataElement.get(mapTags[index]);
+            index++;
+            note.name = (String) dataElement.get(mapTags[index]);
+            index++;
+            note.age = (String) dataElement.get(mapTags[index]);
+            index++;
+            note.hobbies = (String) dataElement.get(mapTags[index]);
+            notes.add(note);
+        }
+        return notes;
+    }
+
     public ArrayList<HashMap<String, Object>> handleData(Context context,
                                                          String[] mapTags) {
+        data.clear();
         ArrayList<HashMap<String, Object>> dataCopy;
         dataCopy = fileManager.getUserData(context);
         int photoIndex = 0;
         for (int element = 0; element < dataCopy.size(); element++) {
             HashMap<String, Object> dataElement = dataCopy.get(element);
             String photoSource = (String) dataElement.get(mapTags[photoIndex]);
-            if (photoSource == null || photoSource.equals(NULL)) {
+            if (photoSource == null || photoSource.equals(DEFAULT_VALUE)) {
                 dataElement.remove(mapTags[photoIndex]);
                 dataElement.put(mapTags[photoIndex], getDefaultBitmap(context));
             } else {
@@ -73,25 +96,24 @@ public class AccountDataHandler {
         return data;
     }
 
-    public void saveNote(Context context, String name, String age,
-                         String hobbies, String[] mapTags) {
-        String photo;
-        if (name.equals(EMPTY) || name.equals(SPACE)) {
-            name = DOUBLE_SPACE;
-        }
-        if (age.equals(EMPTY) || age.equals(SPACE)) {
-            age = DOUBLE_SPACE;
-        }
-        if (hobbies.equals(EMPTY) || hobbies.equals(SPACE)) {
-            hobbies = DOUBLE_SPACE;
-        }
+    public void saveNote(Context context, List<String> accountData,
+                         String[] mapTags) {
+        String[] accountDataCopy = new String[ACCOUNT_FIELDS_AMOUNT];
         if (uploadedBitmap == null) {
-            photo = NULL;
+            accountDataCopy[0] = DEFAULT_VALUE;
         } else {
-            photo = bitmapName;
+            accountDataCopy[0] = bitmapName;
         }
-        fileManager.saveUserData(context, mapTags,
-                new String[]{photo, name, age, hobbies});
+        for(int element = 0; element < accountData.size(); element++){
+            String accountElement = accountData.get(element);
+            if (accountElement.equals(EMPTY) || accountElement.equals(SPACE)) {
+                accountDataCopy[element+1] = DOUBLE_SPACE;
+            }
+            else{
+                accountDataCopy[element+1] = accountElement;
+            }
+        }
+        fileManager.saveUserData(context, mapTags, accountDataCopy);
     }
 
     public void deleteNote(Context context, int position) {
@@ -117,7 +139,7 @@ public class AccountDataHandler {
         return DEFAULT_NAME + this.data.size() + DEFAULT_EXPANSION;
     }
 
-    public Bitmap getDefaultBitmap(Context context) {
+    private Bitmap getDefaultBitmap(Context context) {
         Drawable drawable = ContextCompat.getDrawable(context, R.drawable.default_face);
         Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
                 drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
@@ -136,6 +158,10 @@ public class AccountDataHandler {
             e.printStackTrace();
         }
         return photoBitmap;
+    }
+
+    public void clearData(){
+        data.clear();
     }
 
 }

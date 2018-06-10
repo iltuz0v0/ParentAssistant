@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@color/background"
+    tools:context=".Messaging.MessagingDialog">
+    <TextView
+        android:text="@string/messages"
+        android:background="@color/messaging_title"
+        android:layout_gravity="top"
+        android:paddingLeft="30dp"
+        android:paddingRight="30dp"
+        android:paddingTop="15dp"
+        android:paddingBottom="15dp"
+        android:gravity="center"
+        android:textSize="20sp"
+        android:layout_width="match_parent"
+        android:layout_height="60dp" />
+    <android.support.v7.widget.RecyclerView
+        android:background="@color/background"
+        android:layout_marginTop="60dp"
+        android:id="@+id/messaging_recycle_view"
+        android:layout_width="match_parent"
+        android:layout_marginBottom="60dp"
+        android:layout_height="match_parent"/>
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_gravity="bottom"
+        android:layout_width="match_parent"
+        android:layout_height="60dp">
+    <EditText
+        android:hint="@string/hint_your_message"
+        android:background="@drawable/edit_text_border"
+        android:layout_weight="7"
+        android:layout_gravity="bottom|start"
+        android:id="@+id/messaging_edit_text"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:padding="3dp"
+        android:inputType="textMultiLine"
+        android:scrollbars="vertical"
+        android:gravity="top|start"
+        android:minLines="2"
+        android:maxLines="3"/>
+    <Button
+        android:text="@string/send"
+        android:elevation="10dp"
+        android:background="@drawable/button"
+        android:layout_weight="1"
+        android:id="@+id/messaging_button"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent" />
+    </LinearLayout>
+
+</FrameLayout>

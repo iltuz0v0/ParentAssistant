@@ -10,11 +10,11 @@
         android:layout_height="wrap_content">
         <ImageButton
             android:layout_weight="1"
-            android:id="@+id/delete_element"
+            android:id="@+id/element_deleting"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/description_delete_element"
-            android:layout_gravity="top|right"
+            android:contentDescription="@string/description_element_deleting"
+            android:layout_gravity="top|end"
             android:backgroundTint="@color/button"
             android:src="@drawable/delete_element"
             android:layout_marginTop="5dp" />
