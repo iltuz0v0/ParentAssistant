@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    tools:context=".schedule.EventFragment">
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/event_addition_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:elevation="7dp"
+        android:layout_marginBottom="20dp"
+        android:layout_marginEnd="10dp"
+        app:borderWidth="0dp"
+        android:backgroundTint="@color/floating_button"
+        app:srcCompat="@drawable/event_addition" />
+    <LinearLayout
+        android:id="@+id/addition_container"
+        android:layout_marginBottom="65dp"
+        android:layout_marginEnd="10dp"
+        android:visibility="invisible"
+        android:elevation="3dp"
+        android:layout_marginStart="10dp"
+        android:layout_gravity="end|bottom"
+        android:orientation="vertical"
+        android:background="@drawable/filter_dialog"
+        android:layout_width="match_parent"
+        android:layout_height="150dp">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/from_text_view"
+                android:text="@string/from"
+                android:layout_width="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="5dp"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/to_text_view"
+                android:text="@string/to"
+                android:layout_marginStart="120dp"
+                android:layout_toEndOf="@id/from_text_view"
+                android:layout_marginTop="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/from_edit_text_2"
+                android:ems="5"
+                android:hint="@string/from"
+                android:inputType="text"
+                android:layout_alignStart="@id/from_text_view"
+                android:layout_below="@id/from_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/to_edit_text_2"
+                android:ems="5"
+                android:hint="@string/to"
+                android:inputType="text"
+                android:layout_alignStart="@id/to_text_view"
+                android:layout_toEndOf="@id/from_edit_text"
+                android:layout_below="@id/from_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/choice_2"
+                android:text="@string/sub_map"
+                android:layout_below="@id/from_edit_text_2"
+                android:layout_alignStart="@id/from_edit_text_2"
+                android:backgroundTint="@color/addition_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/send_event"
+                android:text="@string/send"
+                android:layout_below="@id/to_edit_text_2"
+                android:layout_alignStart="@id/to_edit_text_2"
+                android:backgroundTint="@color/addition_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+    </LinearLayout>
+</FrameLayout>

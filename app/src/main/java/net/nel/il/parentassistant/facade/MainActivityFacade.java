@@ -47,5 +47,6 @@ public class MainActivityFacade {
         this.majorHandler = majorHandler;
     }
 
-
+    public MainActivityFacade() {
+    }
 }

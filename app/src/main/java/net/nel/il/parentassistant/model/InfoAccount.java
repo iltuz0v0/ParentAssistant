@@ -14,9 +14,9 @@ public class InfoAccount {
 
     private String photo;
 
-    private Float latitude;
+    private Double latitude;
 
-    private Float longitude;
+    private Double longitude;
 
     private Integer status;
 
@@ -24,8 +24,8 @@ public class InfoAccount {
 
     }
 
-    public InfoAccount(Integer identifier, Float latitude,
-                       Float longitude, Integer status) {
+    public InfoAccount(Integer identifier, Double latitude,
+                       Double longitude, Integer status) {
         this.identifier = identifier;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -34,7 +34,9 @@ public class InfoAccount {
 
 
 
-    public InfoAccount(Integer identifier, String name, String age, String hobby, String photo, Float latitude, Float longitude, Integer status) {
+    public InfoAccount(Integer identifier, String name, String age,
+                       String hobby, String photo, Double latitude,
+                       Double longitude, Integer status) {
         this.identifier = identifier;
         this.name = name;
         this.age = age;
@@ -85,19 +87,19 @@ public class InfoAccount {
         this.hobby = hobby;
     }
 
-    public Float getLatitude() {
+    public Double getLatitude() {
         return latitude;
     }
 
-    public void setLatitude(Float latitude) {
+    public void setLatitude(Double latitude) {
         this.latitude = latitude;
     }
 
-    public Float getLongitude() {
+    public Double getLongitude() {
         return longitude;
     }
 
-    public void setLongitude(Float longitude) {
+    public void setLongitude(Double longitude) {
         this.longitude = longitude;
     }
 

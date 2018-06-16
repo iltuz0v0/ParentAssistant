@@ -80,10 +80,19 @@ public class Messaging {
     }
 
 
-    public void addInnerMessage(String message){
+    public int addInnerMessage(String message){
+        int position;
         innerMessages.add(message);
         synchronized (messageBlock){
             messages.add(new Message(message, true, System.currentTimeMillis()));
+            position = messages.size() - 1;
+        }
+        return position;
+    }
+
+    public void setBadMessage(int position){
+        synchronized (messageBlock){
+            messages.get(position).setBadState(true);
         }
     }
 }

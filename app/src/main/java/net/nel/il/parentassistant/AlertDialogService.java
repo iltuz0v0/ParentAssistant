@@ -72,7 +72,8 @@ public class AlertDialogService {
 
     private void fixPositiveButtonPosition(AlertDialog companionDialog, Context context) {
         Button positiveButton = companionDialog.getButton(AlertDialog.BUTTON_POSITIVE);
-        positiveButton.setBackgroundColor(Color.argb(20, 200, 200, 200));
+        positiveButton.setBackgroundColor(context
+                .getResources().getColor(R.color.alert_background));
         LinearLayout.LayoutParams layoutParams = (LinearLayout.LayoutParams)
                 positiveButton.getLayoutParams();
         layoutParams.weight = context.getResources()
@@ -81,5 +82,37 @@ public class AlertDialogService {
         layoutParams.rightMargin = context.getResources()
                 .getInteger(R.integer.alert_right_margin);
         positiveButton.setLayoutParams(layoutParams);
+    }
+
+    public Dialog createOldAcountReturningDialog(final MainActivity context,
+                                                 String text){
+        AlertDialog gpsDialog;
+        AlertDialog.Builder gpsDialogBuilder = new AlertDialog.Builder(context);
+        gpsDialogBuilder.setMessage(text);
+        gpsDialogBuilder.setPositiveButton(
+                context.getResources().getString(R.string.alert_ok),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        context.doAlertPositive();
+                    }
+                });
+        gpsDialogBuilder.setOnCancelListener(new DialogInterface.OnCancelListener() {
+            @Override
+            public void onCancel(DialogInterface dialog) {
+                context.doAlertNegative();
+            }
+        });
+        gpsDialogBuilder.setNegativeButton(
+                context.getResources().getString(R.string.dialog_cancel),
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        context.doAlertNegative();
+                    }
+                });
+        gpsDialog = gpsDialogBuilder.create();
+        gpsDialog.show();
+        return  gpsDialog;
     }
 }

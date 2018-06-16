@@ -29,7 +29,7 @@ import java.util.List;
 
 public class InfoWindow {
 
-    private final String DEFAULT_SERVER_VALUE = "null";
+    private static final String DEFAULT_SERVER_VALUE = "null";
 
     public static final int SHOW_INFO_WINDOW = 18;
 
@@ -167,5 +167,30 @@ public class InfoWindow {
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
         return bitmap;
+    }
+
+
+
+
+
+    @SuppressWarnings("all")
+    public void createCompanionRequestWindow(Activity context,
+                                             Object accounts) {
+        List<InfoAccount> accountsCopy = (List<InfoAccount>) accounts;
+        View view = createView(context, accountsCopy);
+        AlertDialog.Builder companionDialogBuilder = new AlertDialog.Builder(context,
+                R.style.InfoWindowAlertDialog);
+        companionDialogBuilder.setTitle(R.string.alert_title);
+        companionDialogBuilder.setView(view);
+        companionDialogBuilder.setNegativeButton(R.string.alert_cancel,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.cancel();
+                    }
+                });
+        AlertDialog companionDialog = companionDialogBuilder.create();
+        companionDialog.show();
+        fixButtonPositions(context, companionDialog);
     }
 }

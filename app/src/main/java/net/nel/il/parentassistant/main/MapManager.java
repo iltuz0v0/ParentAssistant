@@ -80,9 +80,9 @@ public class MapManager implements OnMapReadyCallback,
 
     private SharedPreferenceManager sharedPreferenceManager;
 
-    public static int IS_DESTINATION_MARKER = 1;
+    public static final int IS_DESTINATION_MARKER = 1;
 
-    public static int NOT_DESTINATION_MARKER = -1;
+    public static final int NOT_DESTINATION_MARKER = -1;
 
     private boolean isBlock = false;
 
@@ -102,8 +102,6 @@ public class MapManager implements OnMapReadyCallback,
 
     private PolylineOptions lastRoute = null;
 
-    private final Object blockingObject;
-
     private Handler mainActivityHandler;
 
     private ConnectionStateListener connectionStateListener;
@@ -117,7 +115,6 @@ public class MapManager implements OnMapReadyCallback,
                       RouteClient routeClient) {
         this.context = context;
         this.mainActivityHandler = mainActivityHandler;
-        blockingObject = new Object();
         variablesInitialization(context, connectionStateListener, routeClient);
     }
 
@@ -211,11 +208,9 @@ public class MapManager implements OnMapReadyCallback,
         }
         lineOptions.width(widthLine);
         if(lineOptions.getPoints().size() != 0) {
-            synchronized (blockingObject) {
-                removeRoute();
-                route = googleMap.addPolyline(lineOptions);
-                lastRoute = lineOptions;
-            }
+            removeRoute();
+            route = googleMap.addPolyline(lineOptions);
+            lastRoute = lineOptions;
         }
     }
 
@@ -273,55 +268,50 @@ public class MapManager implements OnMapReadyCallback,
     }
 
     public void refreshMarker(InfoAccount infoAccount) {
-        synchronized (blockingObject) {
-            markers.get(infoAccount.getIdentifier())
-                    .setPosition(new LatLng(infoAccount.getLatitude(),
-                            infoAccount.getLongitude()));
-            infoAccounts.get(infoAccount.getIdentifier())
-                    .get(0).setStatus(infoAccount.getStatus());
-        }
+        markers.get(infoAccount.getIdentifier())
+                .setPosition(new LatLng(infoAccount.getLatitude(),
+                        infoAccount.getLongitude()));
+        infoAccounts.get(infoAccount.getIdentifier())
+                .get(0).setStatus(infoAccount.getStatus());
     }
 
     public void addMarker(InfoAccount infoAccount) {
-        synchronized (blockingObject) {
-            if (markers.get(infoAccount.getIdentifier()) == null) {
-                MarkerOptions markerOptions = new MarkerOptions();
-                markerOptions.position(new LatLng(infoAccount.getLatitude(),
-                        infoAccount.getLongitude()));
-                Marker marker = googleMap.addMarker(markerOptions);
-                if(infoAccount.getIdentifier() == specialMarkerId){
-                    changeMarkerColor(marker, R.drawable.changed_marker);
+        if (markers.get(infoAccount.getIdentifier()) == null) {
+            MarkerOptions markerOptions = new MarkerOptions();
+            markerOptions.position(new LatLng(infoAccount.getLatitude(),
+                    infoAccount.getLongitude()));
+            Marker marker = googleMap.addMarker(markerOptions);
+            if(infoAccount.getIdentifier() == specialMarkerId){
+                changeMarkerColor(marker, R.drawable.changed_marker);
+            }
+            else{
+                changeMarkerColor(marker, R.drawable.marker);
+            }
+            marker.setTag(infoAccount.getIdentifier());
+            markers.put(infoAccount.getIdentifier(), marker);
+            List<InfoAccount> listInfoAccounts = new LinkedList<>();
+            listInfoAccounts.add(infoAccount);
+            infoAccounts.put(infoAccount.getIdentifier(), listInfoAccounts);
+            }
+        else {
+            boolean result = true;
+            for (InfoAccount infoAccountElement :
+                    infoAccounts.get(infoAccount.getIdentifier())) {
+                if (infoAccount.equals(infoAccountElement)) {
+                    result = false;
                 }
-                else{
-                    changeMarkerColor(marker, R.drawable.marker);
-                }
-                marker.setTag(infoAccount.getIdentifier());
-                markers.put(infoAccount.getIdentifier(), marker);
-                List<InfoAccount> listInfoAccounts = new LinkedList<>();
-                listInfoAccounts.add(infoAccount);
-                infoAccounts.put(infoAccount.getIdentifier(), listInfoAccounts);
-            } else {
-                boolean result = true;
-                for (InfoAccount infoAccountElement :
-                        infoAccounts.get(infoAccount.getIdentifier())) {
-                    if (infoAccount.equals(infoAccountElement)) {
-                        result = false;
-                    }
-                }
-                if (result) {
-                    infoAccounts.get(infoAccount.getIdentifier()).add(infoAccount);
-                }
+            }
+            if (result) {
+                infoAccounts.get(infoAccount.getIdentifier()).add(infoAccount);
             }
         }
     }
 
     public void deleteMarkers(Set<Integer> markersIdentifiers) {
-        synchronized (blockingObject) {
-            for (int element : markersIdentifiers) {
-                markers.get(element).remove();
-                markers.remove(element);
-                infoAccounts.remove(element);
-            }
+        for (int element : markersIdentifiers) {
+            markers.get(element).remove();
+            markers.remove(element);
+            infoAccounts.remove(element);
         }
     }
 
@@ -343,15 +333,13 @@ public class MapManager implements OnMapReadyCallback,
 
     public int illuminateMarker(int companionId){
         int result;
-        synchronized (blockingObject) {
-            if (markers.get(companionId) != null) {
-                isRequestColor = true;
-                rebuildRoute(companionId);
-                changeMarkerColorToSpecial(companionId);
-                result = IS_DESTINATION_MARKER;
-            } else {
-                result = NOT_DESTINATION_MARKER;
-            }
+        if (markers.get(companionId) != null) {
+            isRequestColor = true;
+            rebuildRoute(companionId);
+            changeMarkerColorToSpecial(companionId);
+            result = IS_DESTINATION_MARKER;
+        } else {
+            result = NOT_DESTINATION_MARKER;
         }
         return result;
     }
@@ -394,24 +382,20 @@ public class MapManager implements OnMapReadyCallback,
     }
 
     public void removeRoute() {
-        synchronized (blockingObject) {
-            if (route != null) {
-                route.remove();
-                lastRoute = null;
-            }
+        if (route != null) {
+            route.remove();
+            lastRoute = null;
         }
     }
 
     public void rebuildRoute(int companionId) {
-        synchronized (blockingObject) {
-            if (markers.get(companionId) != null) {
-                routeClient.getJSON(new LatLng(lastLocation.getLatitude(),
-                                lastLocation.getLongitude()),
-                        markers.get(companionId).getPosition());
-            } else {
-                if (NetworkClient.companionId > 0) {
-                    connectionStateListener.redirectOperation(NetworkClient.COMPANION_IS_OFFLINE);
-                }
+        if (markers.get(companionId) != null) {
+            routeClient.getJSON(new LatLng(lastLocation.getLatitude(),
+                            lastLocation.getLongitude()),
+                    markers.get(companionId).getPosition());
+        } else {
+            if (NetworkClient.companionId > 0) {
+                connectionStateListener.redirectOperation(NetworkClient.COMPANION_IS_OFFLINE);
             }
         }
     }
@@ -442,18 +426,16 @@ public class MapManager implements OnMapReadyCallback,
             circle = googleMap.addCircle(getOuterCircle(currentLocation));
             createStartPosition(currentLocation);
         }
-        synchronized (blockingObject) {
-            if(lastRoute != null){
-                route = googleMap.addPolyline(lastRoute);
-            }
-            Map<Integer, List<InfoAccount>> infoAccountsCopy
-                    = new TreeMap<>(infoAccounts);
-            infoAccounts.clear();
-            markers.clear();
-            for (List<InfoAccount> infoAccount : infoAccountsCopy.values()) {
-                for (InfoAccount infoAccountPart : infoAccount) {
-                    addMarker(infoAccountPart);
-                }
+        if(lastRoute != null){
+            route = googleMap.addPolyline(lastRoute);
+        }
+        Map<Integer, List<InfoAccount>> infoAccountsCopy
+                = new TreeMap<>(infoAccounts);
+        infoAccounts.clear();
+        markers.clear();
+        for (List<InfoAccount> infoAccount : infoAccountsCopy.values()) {
+            for (InfoAccount infoAccountPart : infoAccount) {
+                addMarker(infoAccountPart);
             }
         }
     }

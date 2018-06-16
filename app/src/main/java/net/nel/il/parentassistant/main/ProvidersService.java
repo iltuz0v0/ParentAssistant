@@ -9,15 +9,14 @@ import android.widget.Toast;
 
 import net.nel.il.parentassistant.AlertDialogService;
 import net.nel.il.parentassistant.R;
+import net.nel.il.parentassistant.ToastManager;
 
 public class ProvidersService {
 
     public boolean trackGPS(Activity context, LocationManager locationManager) {
         boolean tracing = false;
-        System.out.println(locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER));
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
                 && MainActivity.isPermissionLocation) {
-            System.out.println("WTF");
             new AlertDialogService().createGPSRequest(context);
         } else if (MainActivity.isPermissionLocation) {
             tracing = true;
@@ -30,9 +29,9 @@ public class ProvidersService {
         if (trackGPS(context, locationManager) && hasInternetConnection(context)) {
             networkConnection = true;
         } else if (!hasInternetConnection(context)) {
-            Toast.makeText(context, context.getResources()
-                    .getString(R.string.toast_turn_on_internet), Toast.LENGTH_LONG)
-                    .show();
+            ToastManager.showToast(context.getResources()
+                    .getString(R.string.toast_turn_on_internet), context);
+
         }
         return networkConnection;
     }

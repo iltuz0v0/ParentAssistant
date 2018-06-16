@@ -12,9 +12,12 @@ public class MessagingViewHolder extends RecyclerView.ViewHolder{
 
     TextView time;
 
+    TextView state;
+
     MessagingViewHolder(View itemView) {
         super(itemView);
         message = itemView.findViewById(R.id.message_text_view);
         time = itemView.findViewById(R.id.time_text_view);
+        state = itemView.findViewById(R.id.state_text_view);
     }
 }

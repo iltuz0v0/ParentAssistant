@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".schedule.SearchFragment">
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/search_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"/>
+    <Button
+        android:id="@+id/filter_button"
+        android:text="@string/filter_button"
+        android:padding="5dp"
+        android:backgroundTint="@color/addition_button"
+        android:layout_gravity="end|bottom"
+        android:layout_marginBottom="10dp"
+        android:layout_marginEnd="10dp"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp" />
+    <LinearLayout
+        android:id="@+id/filter_container"
+        android:layout_marginBottom="65dp"
+        android:layout_marginEnd="10dp"
+        android:visibility="invisible"
+        android:elevation="3dp"
+        android:layout_marginStart="10dp"
+        android:layout_gravity="end|bottom"
+        android:orientation="vertical"
+        android:background="@drawable/filter_dialog"
+        android:layout_width="match_parent"
+        android:layout_height="150dp">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <TextView
+                android:id="@+id/from_text_view"
+                android:text="@string/from"
+                android:layout_width="wrap_content"
+                android:layout_marginStart="20dp"
+                android:layout_marginTop="5dp"
+                android:layout_height="wrap_content" />
+            <TextView
+                android:id="@+id/to_text_view"
+                android:text="@string/to"
+                android:layout_marginStart="120dp"
+                android:layout_toEndOf="@id/from_text_view"
+                android:layout_marginTop="5dp"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/from_edit_text"
+                android:ems="5"
+                android:hint="@string/from"
+                android:inputType="text"
+                android:layout_alignStart="@id/from_text_view"
+                android:layout_below="@id/from_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <EditText
+                android:id="@+id/to_edit_text"
+                android:ems="5"
+                android:hint="@string/to"
+                android:inputType="text"
+                android:layout_alignStart="@id/to_text_view"
+                android:layout_toEndOf="@id/from_edit_text"
+                android:layout_below="@id/from_text_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/choice"
+                android:text="@string/sub_map"
+                android:layout_below="@id/from_edit_text"
+                android:layout_alignStart="@id/from_edit_text"
+                android:backgroundTint="@color/addition_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+            <Button
+                android:id="@+id/search_acc"
+                android:text="@string/seek"
+                android:layout_below="@id/to_edit_text"
+                android:layout_alignStart="@id/to_edit_text"
+                android:backgroundTint="@color/addition_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </RelativeLayout>
+    </LinearLayout>
+</FrameLayout>

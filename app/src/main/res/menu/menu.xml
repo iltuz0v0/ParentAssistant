@@ -7,13 +7,18 @@
         android:orderInCategory="1"
         app:showAsAction="never"/>
     <item
+        android:id="@+id/signed_in"
+        android:title="@string/logout"
+        android:orderInCategory="2"
+        app:showAsAction="never" />
+    <item
         android:id="@+id/account"
         android:title="@string/account"
         app:showAsAction="ifRoom|withText"
         android:icon="@drawable/account"/>
     <item
-        android:id="@+id/signed_in"
-        android:title="@string/logout"
-        android:orderInCategory="2"
-        app:showAsAction="never" />
+        android:id="@+id/schedule"
+        android:title="@string/setting_schedule"
+        app:showAsAction="ifRoom"
+        android:icon="@drawable/schedule" />
 </menu>

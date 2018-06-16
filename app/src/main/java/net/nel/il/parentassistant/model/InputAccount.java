@@ -36,7 +36,29 @@ public class InputAccount {
 
     private Integer messagesAmount;
 
+    private Double pointOneLat;
+
+    private Double pointOneLng;
+
+    private Double pointTwoLat;
+
+    private Double pointTwoLng;
+
+    private String from;
+
+    private String to;
+
     public InputAccount() {
+    }
+
+    public InputAccount(int id, int identifier, float radius, double lat,
+                        double lng, int companion_id) {
+        this.id = id;
+        this.identifier = identifier;
+        this.radius = radius;
+        this.lat = lat;
+        this.lng = lng;
+        this.companion_id = companion_id;
     }
 
     public InputAccount(int id, int identifier, float radius, double lat,
@@ -46,6 +68,7 @@ public class InputAccount {
         this.radius = radius;
         this.lat = lat;
         this.lng = lng;
+        this.companion_id = companion_id;
     }
 
 
@@ -175,5 +198,53 @@ public class InputAccount {
 
     public void setType(Integer type) {
         this.type = type;
+    }
+
+    public Double getPointOneLat() {
+        return pointOneLat;
+    }
+
+    public void setPointOneLat(Double pointOneLat) {
+        this.pointOneLat = pointOneLat;
+    }
+
+    public Double getPointOneLng() {
+        return pointOneLng;
+    }
+
+    public void setPointOneLng(Double pointOneLng) {
+        this.pointOneLng = pointOneLng;
+    }
+
+    public Double getPointTwoLat() {
+        return pointTwoLat;
+    }
+
+    public void setPointTwoLat(Double pointTwoLat) {
+        this.pointTwoLat = pointTwoLat;
+    }
+
+    public Double getPointTwoLng() {
+        return pointTwoLng;
+    }
+
+    public void setPointTwoLng(Double pointTwoLng) {
+        this.pointTwoLng = pointTwoLng;
+    }
+
+    public String getFrom() {
+        return from;
+    }
+
+    public void setFrom(String from) {
+        this.from = from;
+    }
+
+    public String getTo() {
+        return to;
+    }
+
+    public void setTo(String to) {
+        this.to = to;
     }
 }

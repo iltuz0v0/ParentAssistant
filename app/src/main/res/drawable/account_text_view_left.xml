@@ -1,0 +1,6 @@
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <gradient android:angle="270" android:startColor="@color/addition_button"
+        android:endColor="@color/addition_button"/>
+    <corners android:topLeftRadius="10dp"
+             android:bottomLeftRadius="10dp"/>
+</shape>

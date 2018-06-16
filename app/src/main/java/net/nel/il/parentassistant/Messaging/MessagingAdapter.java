@@ -50,7 +50,7 @@ public class MessagingAdapter extends RecyclerView.Adapter<MessagingViewHolder>{
         }
         else{
             fillView(holder, message);
-            holder.message.setGravity(Gravity.RIGHT);
+            holder.message.setGravity(Gravity.END);
             holder.message.setBackground(context.getDrawable(
                     R.drawable.custom_text_view_outer));
         }
@@ -65,6 +65,14 @@ public class MessagingAdapter extends RecyclerView.Adapter<MessagingViewHolder>{
         holder.message.setText(message.getMessage());
         holder.time.setText(DateFormat.format(context.getString(R.string.time),
                 message.getTime().getTime()));
+        if(message.isState()) {
+            holder.state.setText(context.getString(R.string.bad_message_state));
+        }
+    }
+
+    public void setBadMessage(int position){
+        messages.get(position).setBadState(true);
+        notifyDataSetChanged();
     }
 
 }

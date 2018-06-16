@@ -5,7 +5,7 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:background="@color/background"
-    tools:context=".Messaging.MessagingDialog">
+    tools:context=".Messaging.MessagingFragment">
     <TextView
         android:text="@string/messages"
         android:background="@color/messaging_title"
@@ -31,7 +31,7 @@
         android:layout_width="match_parent"
         android:layout_height="60dp">
     <EditText
-        android:hint="@string/hint_your_message"
+        android:hint="@string/hint_your_message_edit_text"
         android:background="@drawable/edit_text_border"
         android:layout_weight="7"
         android:layout_gravity="bottom|start"
@@ -39,7 +39,7 @@
         android:layout_width="wrap_content"
         android:layout_height="match_parent"
         android:padding="3dp"
-        android:inputType="textMultiLine"
+        android:inputType="textMultiLine|textCapSentences"
         android:scrollbars="vertical"
         android:gravity="top|start"
         android:minLines="2"

@@ -1,16 +1,16 @@
 package net.nel.il.parentassistant.main;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.app.Dialog;
-import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.location.Location;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.os.Handler;
@@ -18,6 +18,7 @@ import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -29,6 +30,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.google.android.gms.auth.api.signin.GoogleSignIn;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -37,25 +39,33 @@ import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.SignInButton;
 import com.google.android.gms.common.api.ApiException;
 import com.google.android.gms.maps.MapFragment;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.tasks.Task;
 
 import net.nel.il.parentassistant.AlertDialogService;
 import net.nel.il.parentassistant.Messaging.Messaging;
-import net.nel.il.parentassistant.Messaging.MessagingDialog;
+import net.nel.il.parentassistant.Messaging.MessagingFragment;
+import net.nel.il.parentassistant.ToastManager;
 import net.nel.il.parentassistant.facade.MainActivityFacade;
 import net.nel.il.parentassistant.location.GPSManager;
 import net.nel.il.parentassistant.model.InfoAccount;
+import net.nel.il.parentassistant.model.OutputAccount;
 import net.nel.il.parentassistant.network.NetworkClient;
 import net.nel.il.parentassistant.R;
 import net.nel.il.parentassistant.account.AccountActivity;
 import net.nel.il.parentassistant.network.NetworkClientMessaging;
 import net.nel.il.parentassistant.notification.CustomNotificationManager;
+import net.nel.il.parentassistant.schedule.EventQueue;
+import net.nel.il.parentassistant.schedule.ScheduleFragment;
 import net.nel.il.parentassistant.settings.SettingsActivity;
+import net.nel.il.parentassistant.settings.SharedPreferenceManager;
 
+import java.util.List;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        Handler.Callback, MessagingDialog.MessagingDialogCallback {
+        Handler.Callback, MessagingFragment.MessagingDialogCallback,
+        ScheduleFragment.ScheduleFragmentCallback{
 
     public static final int locationPermissionsRequestCode = 10;
 
@@ -98,6 +108,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private ProgressBar wait;
 
     private MenuItem accountMenuItem;
+
+    private MenuItem scheduleMenuItem;
 
     private MenuItem settingsMenuItem;
 
@@ -153,7 +165,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         signIn(false);
         if(savedInstanceState == null){
             checkPermissions();
-            majorHandler.beginTracingGPS(this);
+            //majorHandler.beginTracingGPS(this);
         }
         else{
             refreshInstance();
@@ -174,7 +186,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (requestCode) {
             case gpsEnableRequestCode:
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    majorHandler.beginTracingGPS(this);
+                    //majorHandler.beginTracingGPS(this);
                 }
                 break;
             case radiusChangeRequestCode:
@@ -195,12 +207,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
         accountMenuItem = menu.findItem(R.id.account);
+        scheduleMenuItem = menu.findItem(R.id.schedule);
         settingsMenuItem = menu.findItem(R.id.settings);
         signedInMenuItem = menu.findItem(R.id.signed_in);
         if(!isSignIn) {
-            signedInMenuItem.setVisible(false);
-            accountMenuItem.setEnabled(false);
-            settingsMenuItem.setEnabled(false);
+            optionsMenuState(false);
         }
         return true;
     }
@@ -220,6 +231,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 client.signOut();
                 signIn(false);
                 break;
+            case R.id.schedule:
+                majorHandler.openScheduleFragment(this);
+                break;
         }
         return super.onOptionsItemSelected(item);
     }
@@ -229,7 +243,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.search:
-                majorHandler.beginSearching(this);
+                //majorHandler.beginSearching(this);
                 break;
             case R.id.cancel:
                 cancelRequest();
@@ -270,17 +284,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void checkPermissions() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionsRequestCode);
-        } else {
-            isPermissionLocation = true;
-        }
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, internetPermissionRequestCode);
-        } else {
-            isPermissionInternet = true;
-        }
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+//                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionsRequestCode);
+//        } else {
+//            isPermissionLocation = true;
+//        }
+//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, internetPermissionRequestCode);
+//        } else {
+//            isPermissionInternet = true;
+//        }
     }
 
     @Override
@@ -291,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (permissions.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED
                         && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     isPermissionLocation = true;
-                    majorHandler.beginTracingGPS(this);
+                   // majorHandler.beginTracingGPS(this);
                 }
                 break;
 
@@ -323,6 +337,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             dialog.dismiss();
         }
         majorHandler.nullHandler();
+        majorHandler.setNegativeAccountTrying();
+        mainActivityHandler = null;
         return facade;
     }
 
@@ -364,6 +380,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case MajorHandler.REFRESH_CHAT:
                 majorHandler.refreshChat();
+                break;
+            case NetworkClient.EVENT_REQUEST:
+                majorHandler.sendAccountsToScheduleFragment(message.obj);
+                break;
+            case NetworkClient.MESSAGE_ANSWER:
+                majorHandler.sendBadMessageState(message.arg1, message.arg2);
+                break;
+            case NetworkClient.TRYING_TO_RETURN_OLD_ACCOUNT:
+                dialog = alertDialogService.createOldAcountReturningDialog(this,
+                        getString(R.string.returning_old_account));
+                break;
         }
     }
 
@@ -407,9 +434,25 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case NetworkClient.NO_INTERNET:
                 dialog = alertDialogService.createCommunicationStateDialog(this,
-                        getString(R.string.not_internet));
+                        getString(R.string.no_internet));
+                break;
+            case NetworkClient.ACCOUNT_UPLOADED:
+                doAccountUploadedState((boolean)message.obj);
                 break;
         }
+    }
+
+    private void doAccountUploadedState(boolean isUploaded){
+        if(isUploaded){
+            ToastManager.showToast(getString(R.string.alert_ok), this);
+        }
+        else{
+            ToastManager.showToast(getString(R.string.failed), this);
+        }
+        changeConstantButtonStates(true);
+        optionsMenuState(true);
+        mainLayout.setForeground(new ColorDrawable(
+                getResources().getColor(R.color.transparent)));
     }
 
     private void closeRequest(){
@@ -561,7 +604,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void variablesInitialization(Bundle savedInstanceState) {
         map = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
-        mainActivityHandler = new Handler(this);
+        //mainActivityHandler = new Handler(this);
         if (savedInstanceState == null) {
             firstInitialization();
         }
@@ -569,33 +612,33 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         walkFrom = (ImageView) findViewById(R.id.walk_from_image_view);
         walkTypeLayout = (LinearLayout) findViewById(R.id.walkTypeLayout);
         buggyButton = (ImageButton) findViewById(R.id.buggy_button);
-        buggyButton.setOnClickListener(this);
+        //buggyButton.setOnClickListener(this);
         walkButton = (ImageButton) findViewById(R.id.walk_button);
-        walkButton.setOnClickListener(this);
+        //walkButton.setOnClickListener(this);
         signInLinearLayout = (LinearLayout) findViewById(R.id.sign_in_layout);
         signInButton = findViewById(R.id.sign_in_button);
-        signInButton.setOnClickListener(this);
+        //signInButton.setOnClickListener(this);
         message = (FloatingActionButton) findViewById(R.id.messaging);
-        message.setOnClickListener(this);
-        // remove
+        //
         message.setVisibility(View.VISIBLE);
         //
+        //message.setOnClickListener(this);
         alertDialogService = new AlertDialogService();
         mainLayout = (FrameLayout) findViewById(R.id.main_layout);
         close = (ImageView) findViewById(R.id.close);
-        close.setOnClickListener(this);
+        //close.setOnClickListener(this);
         requestWindow = (LinearLayout) findViewById(R.id.is_request_window);
-        requestWindow.setOnClickListener(this);
+        //requestWindow.setOnClickListener(this);
         accept = (Button) findViewById(R.id.accept);
-        accept.setOnClickListener(this);
+        //accept.setOnClickListener(this);
         reject = (Button) findViewById(R.id.reject);
-        reject.setOnClickListener(this);
+        //reject.setOnClickListener(this);
         cancel = (Button) findViewById(R.id.cancel);
-        cancel.setOnClickListener(this);
+        //cancel.setOnClickListener(this);
         location = (FloatingActionButton) findViewById(R.id.location);
-        location.setOnClickListener(this);
+        //location.setOnClickListener(this);
         search = (FloatingActionButton) findViewById(R.id.search);
-        search.setOnClickListener(this);
+        //search.setOnClickListener(this);
         wait = (ProgressBar) findViewById(R.id.request_in_progress);
     }
 
@@ -608,8 +651,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void sendMessage(String message) {
-        majorHandler.sendMessage(message);
+    public void sendMessage(String message, int position, int finishPosition) {
+        majorHandler.sendMessage(message, position, finishPosition);
     }
 
     @Override
@@ -618,18 +661,20 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void setMessagingDialogState(boolean state) {
-        majorHandler.setMessagingDialogState(state);
+    public void setMessagingDialogState(boolean state, MessagingFragment messagingFragment) {
+        majorHandler.setMessagingDialogState(state, messagingFragment);
     }
 
     @Override
     public void block() {
         doBlockState(View.INVISIBLE);
+        optionsMenuVisible(false);
     }
 
     @Override
     public void unblock() {
         doBlockState(View.VISIBLE);
+        optionsMenuVisible(true);
     }
 
     private void doBlockState(int visibility){
@@ -645,13 +690,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void refreshChatState(MessagingDialog messagingDialog) {
-        majorHandler.refreshChatState(messagingDialog);
+    public void refreshChatState(MessagingFragment messagingFragment) {
+        majorHandler.refreshChatState(messagingFragment);
     }
 
     @Override
     public Context getAppContext() {
         return getApplicationContext();
+    }
+
+    @Override
+    public Location getLocation() {
+        return majorHandler.getLocation();
+    }
+
+    @Override
+    public void sendAccountRequest(List<LatLng> points, String from,
+                                   String to) {
+        majorHandler.sendAccountRequest(points, from, to);
+    }
+
+    @Override
+    public void sendEventRequest(List<LatLng> points, String from, String to) {
+        majorHandler.sendEventRequest(points, from, to);
+    }
+
+    @Override
+    public EventQueue getEventQueue() {
+        return majorHandler.getEventQueue();
+    }
+
+    @Override
+    public void setScheduleFragmentState(boolean state, ScheduleFragment scheduleFragment) {
+        if(message.getVisibility() == View.INVISIBLE){
+            cancel.setVisibility(View.INVISIBLE);
+        }
+        majorHandler.setScheduleFragmentState(state, scheduleFragment);
     }
 
     public void refreshInstance(){
@@ -712,12 +786,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             changeConstantButtonStates(true);
             optionsMenuState(true);
             GoogleSignInAccount account = task.getResult(ApiException.class);
-            SharedPreferences.Editor preferences =
-                    getSharedPreferences(getResources()
-                                    .getString(R.string.network_data_file),
-                            Context.MODE_PRIVATE).edit();
-            preferences.putString(getString(R.string.google_identifier), account.getId());
-            preferences.apply();
+            boolean result = SharedPreferenceManager
+                    .saveGoogleIdentifier(getApplicationContext(), account);
+            if(result){
+                SharedPreferenceManager.accountInformationUpdated(getApplicationContext());
+            }
         } catch (ApiException e) {
             e.printStackTrace();
         }
@@ -729,9 +802,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void optionsMenuState(boolean state){
-        accountMenuItem.setEnabled(state);
-        settingsMenuItem.setEnabled(state);
-        signedInMenuItem.setVisible(state);
+        if(accountMenuItem != null) {
+            accountMenuItem.setEnabled(state);
+            scheduleMenuItem.setEnabled(state);
+            settingsMenuItem.setEnabled(state);
+            signedInMenuItem.setVisible(state);
+        }
+    }
+
+    private void optionsMenuVisible(boolean state){
+        if(accountMenuItem != null) {
+            accountMenuItem.setVisible(state);
+            scheduleMenuItem.setVisible(state);
+            settingsMenuItem.setVisible(state);
+            signedInMenuItem.setVisible(state);
+        }
     }
 
     private void unableWaiting() {
@@ -739,6 +824,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         close.setVisibility(View.INVISIBLE);
         mainLayout.setForeground(new ColorDrawable(
                 getResources().getColor(R.color.transparent)));
+    }
+
+    public void doAlertPositive(){
+        changeConstantButtonStates(false);
+        optionsMenuState(false);
+        mainLayout.setForeground(new ColorDrawable(
+                getResources().getColor(R.color.main_activity_foreground)));
+        majorHandler.doAlertPositive();
+    }
+
+    public void doAlertNegative(){
+        majorHandler.doAlertNegative();
     }
 
 }

@@ -22,4 +22,14 @@
     <color name="background">#ffffff</color>
     <color name="message_text">#000000</color>
     <color name="messaging_title">#efefef</color>
+    <color name="error_text">#b90000</color>
+    <color name="walk_background">#e9fdeb</color>
+    <color name="marker_default_color">#900705</color>
+    <color name="marker_color">#349000</color>
+    <color name="filter_container_color">#f7f7f7</color>
+    <color name="default_dark">#000000</color>
+    <color name="default_gray">#6E706E</color>
+    <color name="messaging_edit_text_border">#aaaaaa</color>
+    <color name="account">#FFFDFB</color>
+    <color name="alert_background">#14c8c8c8</color>
 </resources>

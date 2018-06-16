@@ -4,23 +4,27 @@ import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.Network;
 import android.os.Handler;
 import android.os.Message;
-import android.view.LayoutInflater;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.LatLng;
 
 import net.nel.il.parentassistant.Messaging.Messaging;
-import net.nel.il.parentassistant.Messaging.MessagingDialog;
+import net.nel.il.parentassistant.Messaging.MessagingFragment;
 import net.nel.il.parentassistant.R;
+import net.nel.il.parentassistant.ToastManager;
 import net.nel.il.parentassistant.interfaces.ConnectionStateListener;
+import net.nel.il.parentassistant.model.OutputAccount;
 import net.nel.il.parentassistant.network.NetworkClient;
-import net.nel.il.parentassistant.network.NetworkClientMessaging;
 import net.nel.il.parentassistant.interfaces.LocationReceiver;
 import net.nel.il.parentassistant.interfaces.MarkerStateListener;
 import net.nel.il.parentassistant.location.GPSManager;
 import net.nel.il.parentassistant.model.InfoAccount;
+import net.nel.il.parentassistant.schedule.EventQueue;
+import net.nel.il.parentassistant.schedule.ScheduleFragment;
 
 import java.util.HashMap;
 import java.util.List;
@@ -53,13 +57,23 @@ public class MajorHandler implements LocationReceiver,
 
     private Messaging messaging;
 
-    private MessagingDialog messagingDialog;
+    private EventQueue eventQueue;
+
+    private MessagingFragment messagingFragment;
+
+    private ScheduleFragment scheduleFragment;
 
     private boolean messagingDialogState = false;
+
+    private boolean scheduleFragmentState = false;
 
     private boolean isNullHandler = false;
 
     private final Object blockingObject;
+
+    private boolean isStarted = false;
+
+    private boolean isAccountTrying = false;
 
     MajorHandler(Context context, LocationManager locationManager,
                  MapFragment map, Handler mainActivityHandler) {
@@ -77,6 +91,7 @@ public class MajorHandler implements LocationReceiver,
     public void beginSearching(Activity context) {
         if (providersService.search(context, locationManager)) {
             if (!isRunningNetworkClient) {
+                isStarted = true;
                 networkClient.startNetworkClient();
                 isRunningNetworkClient = !isRunningNetworkClient;
             }
@@ -114,7 +129,7 @@ public class MajorHandler implements LocationReceiver,
                 }
             }
             if (messagingDialogState) {
-                messagingDialog.refreshChat();
+                messagingFragment.refreshChat();
             } else {
                 if (messaging.getNewOuterMessagesAmount() == 1) {
                     sendMainActivityHandlerMessage(MainActivity.ONE_MESSAGE_ICON);
@@ -125,7 +140,8 @@ public class MajorHandler implements LocationReceiver,
         }
     }
 
-    public void setMessagingDialogState(boolean state){
+    public void setMessagingDialogState(boolean state, MessagingFragment messagingFragment){
+        this.messagingFragment = messagingFragment;
         this.messagingDialogState = state;
     }
 
@@ -200,10 +216,7 @@ public class MajorHandler implements LocationReceiver,
     }
 
     private void trySendCompanionRequest(int id) {
-        Message message = mainActivityHandler.obtainMessage();
-        message.arg1 = id;
-        message.what = IS_REQUEST_TO;
-        sendMainActivityHandlerMessage(message);
+        sendMainActivityHandlerMessage(IS_REQUEST_TO, id, -1);
     }
 
     public void sendCompanionRequest(int companionId, int type){
@@ -211,32 +224,51 @@ public class MajorHandler implements LocationReceiver,
         mapManager.blockEverything();
     }
 
-    private void sendRequestFrom(Message message) {
-        Message message2 = mainActivityHandler.obtainMessage();
-        message2.arg1 = message.arg1;
-        message2.arg2 = message.arg2;
-        message2.what = NetworkClient.IS_REQUEST_FROM;
-        sendMainActivityHandlerMessage(message2);
+    private void sendRequestFrom(int code, int arg1, int arg2) {
+        sendMainActivityHandlerMessage(code,
+                arg1, arg2);
     }
 
     public void openMessagingDialog(Activity context){
         context.getFragmentManager().beginTransaction().add(
-                R.id.main_layout, messagingDialog).addToBackStack(null).commit();
+                R.id.main_layout, messagingFragment).addToBackStack(null).commit();
     }
 
-    public void sendMessage(String message){
-        networkClient.setSendMessage(message);
+    public void openScheduleFragment(Activity context){
+        if(!isStarted){
+            ToastManager.showToast(context
+                    .getString(R.string.toast_start_search), context);
+        }
+        else{
+            context.getFragmentManager().beginTransaction().add(
+                    R.id.main_layout, scheduleFragment)
+                    .addToBackStack(null).commit();
+        }
+    }
+
+    public void sendMessage(String message, int position, int finishPosition){
+        networkClient.setSendMessage(message, position, finishPosition);
     }
 
     public Messaging getMessagingObject(){
         return messaging;
     }
 
+    public void sendAccountRequest(List<LatLng> points, String from, String to){
+        networkClient.setAccountRequest(points, from, to);
+    }
+
+    public void sendEventRequest(List<LatLng> points, String from, String to){
+        networkClient.setEventRequest(points, from, to);
+    }
+
     private void variablesInitialization(Context context,
             LocationManager locationManager, MapFragment map,
             Handler mainActivityHandler) {
         messaging = new Messaging();
-        messagingDialog = new MessagingDialog();
+        eventQueue = new EventQueue();
+        messagingFragment = new MessagingFragment();
+        scheduleFragment = new ScheduleFragment();
         this.mainActivityHandler = mainActivityHandler;
         this.locationManager = locationManager;
         networkClient = new NetworkClient(context,this,
@@ -260,7 +292,7 @@ public class MajorHandler implements LocationReceiver,
 
 
     @SuppressWarnings("all")
-    public void sendMainActivityHandlerMessage(int what){
+    private void sendMainActivityHandlerMessage(int what){
         synchronized (blockingObject){
             if (mainActivityHandler == null){
                 while (isNullHandler) {
@@ -273,14 +305,33 @@ public class MajorHandler implements LocationReceiver,
 
 
     @SuppressWarnings("all")
-    public void sendMainActivityHandlerMessage(Message message){
+    private void sendMainActivityHandlerMessage(int what, Object obj){
         synchronized (blockingObject) {
             if (mainActivityHandler == null){
                 while (isNullHandler) {
                     continue;
                 }
             }
-            mainActivityHandler.sendMessage(message);
+            Message message1 = mainActivityHandler.obtainMessage();
+            message1.what = what;
+            message1.obj = obj;
+            mainActivityHandler.sendMessage(message1);
+        }
+    }
+
+    @SuppressWarnings("all")
+    private void sendMainActivityHandlerMessage(int what, int arg1, int arg2){
+        synchronized (blockingObject) {
+            if (mainActivityHandler == null){
+                while (isNullHandler) {
+                    continue;
+                }
+            }
+            Message message1 = mainActivityHandler.obtainMessage();
+            message1.what = what;
+            message1.arg1 = arg1;
+            message1.arg2 = arg2;
+            mainActivityHandler.sendMessage(message1);
         }
     }
 
@@ -306,8 +357,8 @@ public class MajorHandler implements LocationReceiver,
         isNullHandler = false;
     }
 
-    public void refreshChatState(MessagingDialog messagingDialog){
-        this.messagingDialog = messagingDialog;
+    public void refreshChatState(MessagingFragment messagingFragment){
+        this.messagingFragment = messagingFragment;
     }
 
     @Override
@@ -316,10 +367,13 @@ public class MajorHandler implements LocationReceiver,
     }
 
     @Override
+    public void redirectOperation(int code, boolean result) {
+        sendWhatObjMessage(code, result);
+    }
+
+    @Override
     public void redirectRemovingRoute(int code) {
-        Message message = mainActivityHandler.obtainMessage();
-        message.what = NetworkClient.ROUTE_REMOVING;
-        sendMainActivityHandlerMessage(message);
+        sendMainActivityHandlerMessage(code);
     }
 
     public void removeRoute(){
@@ -328,10 +382,8 @@ public class MajorHandler implements LocationReceiver,
 
     @Override
     public void redirectRebuildingRoute(int code, int companionId) {
-        Message message = mainActivityHandler.obtainMessage();
-        message.what = NetworkClient.ROUTE_REBUILDING;
-        message.arg1 = companionId;
-        sendMainActivityHandlerMessage(message);
+        sendMainActivityHandlerMessage(code,
+                companionId, -1);
     }
 
     public void rebuildRoute(int companionId){
@@ -340,11 +392,7 @@ public class MajorHandler implements LocationReceiver,
 
     @Override
     public void redirectIsRequestFrom(int code, int companionId, int type) {
-        Message message = mainActivityHandler.obtainMessage();
-        message.what = code;
-        message.arg1 = companionId;
-        message.arg2 = type;
-        sendRequestFrom(message);
+        sendRequestFrom(code, companionId, type);
     }
 
     @Override
@@ -359,38 +407,92 @@ public class MajorHandler implements LocationReceiver,
 
     @Override
     public void redirectMarkerRefreshing(int code, InfoAccount infoAccount) {
-        Message message = mainActivityHandler.obtainMessage();
-        message.what = code;
-        message.obj = infoAccount;
-        sendMainActivityHandlerMessage(message);
+        sendWhatObjMessage(code, infoAccount);
     }
 
     @Override
     public void redirectMarkerAddition(int code, InfoAccount infoAccount) {
-        Message message = mainActivityHandler.obtainMessage();
-        message.what = code;
-        message.obj = infoAccount;
-        sendMainActivityHandlerMessage(message);
+        sendWhatObjMessage(code, infoAccount);
     }
 
     @Override
     public void redirectMarkerDeleting(int code, Set<Integer> markers) {
-        Message message = mainActivityHandler.obtainMessage();
-        message.what = code;
-        message.obj = markers;
-        sendMainActivityHandlerMessage(message);
+        sendWhatObjMessage(code, markers);
+    }
+
+    public void sendAccountsToScheduleFragment(Object outputAccount){
+        eventQueue.setOutputObject((OutputAccount) outputAccount);
+        if (mainActivityHandler == null){
+            while (isNullHandler) {
+                continue;
+            }
+        }
+        if (scheduleFragmentState) {
+            scheduleFragment.setOutputAccount(true);
+        }
+    }
+
+    private void sendWhatObjMessage(int what, Object obj){
+        sendMainActivityHandlerMessage(what, obj);
     }
 
     @Override
     public void redirectRouteDrawing(int code, List<List<HashMap<String, String>>> route) {
-        Message message = mainActivityHandler.obtainMessage();
-        message.what = code;
-        message.obj = route;
-        sendMainActivityHandlerMessage(message);
+        sendWhatObjMessage(code, route);
+    }
+
+    public EventQueue getEventQueue(){
+        return eventQueue;
+    }
+
+    @Override
+    public void redirectOutputObject(int code, OutputAccount outputAccount) {
+        sendMainActivityHandlerMessage(code, outputAccount);
+    }
+
+    @Override
+    public void redirectMessageAnswer(int code, int position, int finishPosition) {
+        sendMainActivityHandlerMessage(code, position, finishPosition);
+    }
+
+    @Override
+    public void redirectAccountTrying(int code) {
+        if(!isAccountTrying){
+            isAccountTrying = true;
+            sendMainActivityHandlerMessage(code);
+        }
+    }
+
+    public void setNegativeAccountTrying(){
+        isAccountTrying = false;
     }
 
     public void doCompanionRequest(int code, int companionId){
         trySendCompanionRequest(companionId);
+    }
+
+    public void setScheduleFragmentState(boolean state, ScheduleFragment scheduleFragment){
+        this.scheduleFragment = scheduleFragment;
+        scheduleFragmentState = state;
+    }
+
+    public void sendBadMessageState(int position, int finishPosition){
+        if (mainActivityHandler == null){
+            while (isNullHandler) {
+                continue;
+            }
+        }
+        if (messagingDialogState) {
+            messagingFragment.setBadMessage(position, finishPosition);
+        }
+    }
+
+    public void doAlertNegative(){
+        networkClient.doAlertNegative();
+    }
+
+    public void doAlertPositive(){
+        networkClient.doAlertPositive();
     }
 
 }

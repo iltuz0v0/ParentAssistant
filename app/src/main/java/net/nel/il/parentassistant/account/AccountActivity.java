@@ -22,6 +22,7 @@ import net.nel.il.parentassistant.FileManager;
 import net.nel.il.parentassistant.R;
 import net.nel.il.parentassistant.facade.AccountActivityFacade;
 import net.nel.il.parentassistant.interfaces.AdapterStateListener;
+import net.nel.il.parentassistant.settings.SharedPreferenceManager;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -127,21 +128,12 @@ public class AccountActivity extends AppCompatActivity
         accountDataHandler.deleteNote(getApplicationContext(), position);
     }
 
-    private void accountInformationUpdated() {
-        SharedPreferences preferences = getSharedPreferences(
-                getResources().getString(R.string.network_data_file),
-                Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = preferences.edit();
-        editor.putBoolean(getString(R.string.shared_update_account), true);
-        editor.apply();
-    }
-
     private void saveNote() {
         List<String> accountList = new ArrayList<>();
         accountList.add(nameEditText.getText().toString());
         accountList.add(ageEditText.getText().toString());
         accountList.add(hobbiesEditText.getText().toString());
-        accountInformationUpdated();
+        SharedPreferenceManager.accountInformationUpdated(getApplicationContext());
         accountDataHandler.saveNote(getApplicationContext(), accountList, mapTags);
         elementAdditionContainer.setVisibility(View.INVISIBLE);
         accountAdapter.setData(accountDataHandler

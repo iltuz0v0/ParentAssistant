@@ -4,9 +4,13 @@ import android.content.Context;
 import android.os.Handler;
 import android.os.Message;
 
+import com.google.android.gms.maps.model.LatLng;
+import com.google.gson.Gson;
+
 import net.nel.il.parentassistant.Messaging.Messaging;
 import net.nel.il.parentassistant.interfaces.ConnectionStateListener;
 import net.nel.il.parentassistant.interfaces.MarkerStateListener;
+import net.nel.il.parentassistant.model.ExtraMessage;
 import net.nel.il.parentassistant.model.OutputAccount;
 
 import java.util.ArrayList;
@@ -15,9 +19,9 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NetworkClient implements Runnable {
 
-    public static final int CREATE_ACCOUNT = 1;
+    public static final int ACCOUNT_CREATING = 1;
 
-    public static final int GET_DATA = 2;
+    public static final int GETTING_DATA = 2;
 
     public static final int UPDATE = 3;
 
@@ -50,6 +54,20 @@ public class NetworkClient implements Runnable {
     public static final int CLEAR_MESSAGES = 20;
 
     public static final int NO_INTERNET = 21;
+
+    public static final int MESSAGE_ANSWER = 30;
+
+    public static final int EVENT_REQUEST = 50;
+
+    public static final int EVENT_CREATION_REQUEST = 51;
+
+    public static final int TRYING_TO_RETURN_OLD_ACCOUNT = 100;
+
+    public static final int NEGATIVE_TRYING_TO_RETURN_OLD_ACCOUNT = 101;
+
+    public static final int POSITIVE_TRYING_TO_RETURN_OLD_ACCOUNT = 102;
+
+    public static final int ACCOUNT_UPLOADED = 103;
 
     private boolean beginRequestTo = false;
 
@@ -101,7 +119,7 @@ public class NetworkClient implements Runnable {
 
     private boolean closed = false;
 
-    private List<String> messages;
+    private List<ExtraMessage> messages;
 
     private Messaging messaging;
 
@@ -117,6 +135,19 @@ public class NetworkClient implements Runnable {
 
     private RequestFrom requestFrom;
 
+    private boolean accountRequest = false;
+
+    private boolean eventRequest = false;
+
+    private boolean accountNegativeTrying = false;
+
+    private boolean accountPositiveTrying = false;
+
+    private List<LatLng> points;
+
+    private String from;
+
+    private String to;
 
     public NetworkClient(Context context, ConnectionStateListener connectionStateListener,
                          MarkerStateListener markerReceiver, Messaging messaging) {
@@ -140,6 +171,20 @@ public class NetworkClient implements Runnable {
         this.beginRequestTo = beginRequestTo;
         this.companionId = companionId;
         this.type = type;
+    }
+
+    public void setAccountRequest(List<LatLng> points, String from, String to){
+        this.points = points;
+        this.from = from;
+        this.to = to;
+        accountRequest = true;
+    }
+
+    public void setEventRequest(List<LatLng> points, String from, String to){
+        this.points = points;
+        this.from = from;
+        this.to = to;
+        eventRequest = true;
     }
 
 
@@ -181,6 +226,8 @@ public class NetworkClient implements Runnable {
             account = networkClientMessaging.sendDataRequest();
             long beginTime = System.currentTimeMillis();
             while (System.currentTimeMillis() - beginTime <= checkDelay) {
+                doTryingToReturnOldAccount(account);
+                specialEvents();
                 finishRequest();
                 handleRequestTo(account);
                 finishRequest();
@@ -191,6 +238,39 @@ public class NetworkClient implements Runnable {
                     e.printStackTrace();
                 }
             }
+        }
+    }
+
+    private void doTryingToReturnOldAccount(OutputAccount account){
+        if(account.getId() == TRYING_TO_RETURN_OLD_ACCOUNT){
+            connectionStateListener.redirectAccountTrying(TRYING_TO_RETURN_OLD_ACCOUNT);
+        }
+        if(accountNegativeTrying){
+            accountNegativeTrying = false;
+            sendAccountTryingNegative();
+        }
+        if(accountPositiveTrying){
+            accountPositiveTrying = false;
+            sendAccountTryingPositive();
+        }
+    }
+
+    public void doAlertNegative(){
+        accountNegativeTrying = true;
+    }
+
+    public void doAlertPositive(){
+        accountPositiveTrying = true;
+    }
+
+    private void specialEvents(){
+        if(accountRequest){
+            accountRequest = false;
+            sendAccountRequest();
+        }
+        if(eventRequest){
+            eventRequest = false;
+            sendEventRequest();
         }
     }
 
@@ -366,6 +446,30 @@ public class NetworkClient implements Runnable {
         isRequestFrom = false;
     }
 
+    private void sendAccountRequest(){
+        OutputAccount outputAccount = networkClientMessaging.sendAccountRequest(EVENT_REQUEST, points, from,
+                to);
+        if(outputAccount.getId() == EVENT_REQUEST) {
+            connectionStateListener.redirectOutputObject(EVENT_REQUEST, outputAccount);
+        }
+    }
+
+    private void sendAccountTryingNegative(){
+        networkClientMessaging
+                .doAlertNegative(NEGATIVE_TRYING_TO_RETURN_OLD_ACCOUNT);
+    }
+
+    private void sendAccountTryingPositive(){
+        boolean result = networkClientMessaging
+                .doAlertPositive(POSITIVE_TRYING_TO_RETURN_OLD_ACCOUNT);
+        connectionStateListener.redirectOperation(ACCOUNT_UPLOADED, result);
+    }
+
+    private void sendEventRequest(){
+        networkClientMessaging.sendAccountRequest(EVENT_CREATION_REQUEST, points,
+                from, to);
+    }
+
     public boolean isBeginRequestTo() {
         return beginRequestTo;
     }
@@ -391,15 +495,15 @@ public class NetworkClient implements Runnable {
         }
     }
 
-    public void setSendMessage(String message){
+    public void setSendMessage(String message, int position, int finishPosition){
         synchronized (messagingBlock) {
-            messages.add(message);
+            messages.add(new ExtraMessage(message, position, finishPosition));
         }
     }
 
     @SuppressWarnings("all")
     private void handleMessaging(){
-        List<String> msgs = null;
+        List<ExtraMessage> msgs = null;
         synchronized (messagingBlock) {
             if (messages.size() > 0) {
                 msgs = new ArrayList<>();
@@ -409,8 +513,12 @@ public class NetworkClient implements Runnable {
         }
         if(msgs != null) {
             for (int element = 0; element < msgs.size(); element++) {
-                networkClientMessaging.sendMessage(msgs.get(element),
-                        companionId);
+                String result = networkClientMessaging.sendMessage(
+                        msgs.get(element).getMessage(), companionId);
+                if(result == NetworkClientMessaging.DEFAULT_OUTPUT_JSON){
+                    connectionStateListener.redirectMessageAnswer(MESSAGE_ANSWER,
+                            msgs.get(element).getPosition(), msgs.get(element).getFinishPosition());
+                }
             }
         }
     }

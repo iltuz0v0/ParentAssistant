@@ -1,7 +1,17 @@
 package net.nel.il.parentassistant;
 
 import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.util.Base64;
 
+import net.nel.il.parentassistant.model.InfoAccount;
+import net.nel.il.parentassistant.model.OutputAccount;
+
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -14,6 +24,10 @@ import java.util.HashMap;
 public class FileManager {
 
     private final String SPACE = " ";
+
+    private static final int ACCOUNT_FIELDS_AMOUNT = 4;
+
+    private static final int QUALITY_COMPRESS = 50;
 
     public FileManager(String fileName) {
         this.usedFile = fileName;
@@ -77,6 +91,38 @@ public class FileManager {
             e.printStackTrace();
         }
 
+    }
+
+    public void saveUserDataFromServer(OutputAccount outputAccount,
+                                       Context context){
+        String[] mapTags = context.getResources().getStringArray(R.array.mapTags);
+        String[] dataCopy = new String[ACCOUNT_FIELDS_AMOUNT];
+        int index = 0;
+        for(int element = 0; element < outputAccount.getNames().size(); element++){
+            dataCopy[index++] = Integer.toString(element);
+            uploadBitmap(context, Integer.toString(element), outputAccount.getPhotos().get(element));
+            dataCopy[index++] = outputAccount.getNames().get(element);
+            dataCopy[index++] = outputAccount.getAges().get(element);
+            dataCopy[index] = outputAccount.getHobbies().get(element);
+            index = 0;
+            saveUserData(context, mapTags, dataCopy);
+        }
+    }
+
+    private void uploadBitmap(Context context, String name, String photo) {
+        try (BufferedOutputStream writer = new BufferedOutputStream(
+                context.openFileOutput(name, Context.MODE_PRIVATE))) {
+            Bitmap bitmap = decodeImage(photo);
+            bitmap.compress(Bitmap.CompressFormat.JPEG, QUALITY_COMPRESS, writer);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private Bitmap decodeImage(String photo) {
+        byte[] photoCopy = Base64.decode(photo, Base64.DEFAULT);
+        return BitmapFactory
+                .decodeByteArray(photoCopy, 0, photoCopy.length);
     }
 
     public void deleteUserData(Context context, int position) {

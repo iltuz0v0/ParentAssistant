@@ -30,19 +30,19 @@ public class AccountDataHandler {
 
     private ArrayList<HashMap<String, Object>> data;
 
-    private final String DEFAULT_NAME = "name";
+    private static final String DEFAULT_NAME = "name";
 
-    private final String DEFAULT_EXPANSION = ".jpg";
+    private static final String DEFAULT_EXPANSION = ".jpg";
 
-    private final int QUALITY_COMPRESS = 50;
+    private static final int QUALITY_COMPRESS = 50;
 
     private final String DEFAULT_VALUE = "null";
 
     private final String EMPTY = "";
 
-    private final String SPACE = " ";
+    private static final String SPACE = " ";
 
-    private final String DOUBLE_SPACE = "  ";
+    private static final String DOUBLE_SPACE = "  ";
 
     private final static int ACCOUNT_FIELDS_AMOUNT = 4;
 
@@ -58,12 +58,9 @@ public class AccountDataHandler {
             int index = 0;
             Note note = new Note();
             note.deletingResource = R.drawable.delete_element;
-            note.photo = (Bitmap) dataElement.get(mapTags[index]);
-            index++;
-            note.name = (String) dataElement.get(mapTags[index]);
-            index++;
-            note.age = (String) dataElement.get(mapTags[index]);
-            index++;
+            note.photo = (Bitmap) dataElement.get(mapTags[index++]);
+            note.name = (String) dataElement.get(mapTags[index++]);
+            note.age = (String) dataElement.get(mapTags[index++]);
             note.hobbies = (String) dataElement.get(mapTags[index]);
             notes.add(note);
         }
