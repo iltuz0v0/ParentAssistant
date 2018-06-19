@@ -24,8 +24,7 @@ public class InfoAccount {
 
     }
 
-    public InfoAccount(Integer identifier, Double latitude,
-                       Double longitude, Integer status) {
+    public InfoAccount(Integer identifier, Double latitude, Double longitude, Integer status) {
         this.identifier = identifier;
         this.latitude = latitude;
         this.longitude = longitude;
@@ -33,10 +32,7 @@ public class InfoAccount {
     }
 
 
-
-    public InfoAccount(Integer identifier, String name, String age,
-                       String hobby, String photo, Double latitude,
-                       Double longitude, Integer status) {
+    public InfoAccount(Integer identifier, String name, String age, String hobby, String photo, Double latitude, Double longitude, Integer status) {
         this.identifier = identifier;
         this.name = name;
         this.age = age;
@@ -116,14 +112,7 @@ public class InfoAccount {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         InfoAccount account = (InfoAccount) o;
-        return Objects.equals(identifier, account.identifier) &&
-                Objects.equals(name, account.name) &&
-                Objects.equals(age, account.age) &&
-                Objects.equals(hobby, account.hobby) &&
-                Objects.equals(photo, account.photo) &&
-                Objects.equals(latitude, account.latitude) &&
-                Objects.equals(longitude, account.longitude) &&
-                Objects.equals(status, account.status);
+        return Objects.equals(identifier, account.identifier) && Objects.equals(name, account.name) && Objects.equals(age, account.age) && Objects.equals(hobby, account.hobby) && Objects.equals(photo, account.photo) && Objects.equals(latitude, account.latitude) && Objects.equals(longitude, account.longitude) && Objects.equals(status, account.status);
     }
 
     @Override

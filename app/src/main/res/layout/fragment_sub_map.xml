@@ -1,51 +1,56 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/sub_map"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".schedule.SubMapFragment">
+
     <fragment
         android:id="@+id/mapFr"
         android:name="com.google.android.gms.maps.MapFragment"
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
+
     <LinearLayout
         android:id="@+id/acception_container"
-        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal|bottom"
+        android:layout_marginBottom="50dp"
         android:background="@color/background"
         android:elevation="5dp"
-        android:visibility="invisible"
-        android:layout_marginBottom="50dp"
-        android:layout_gravity="center_horizontal|bottom"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content">
+        android:orientation="horizontal"
+        android:visibility="invisible">
+
         <Button
             android:id="@+id/acception"
-            android:text="@string/accept"
-            android:padding="5dp"
-            android:backgroundTint="@color/addition_button"
-            android:layout_margin="10dp"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
+            android:backgroundTint="@color/addition_button"
+            android:padding="5dp"
+            android:text="@string/accept" />
+
         <Button
             android:id="@+id/rejection"
-            android:text="@string/reject"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="10dp"
             android:backgroundTint="@color/addition_button"
             android:padding="5dp"
-            android:layout_margin="10dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:text="@string/reject" />
     </LinearLayout>
+
     <android.support.design.widget.FloatingActionButton
         android:id="@+id/locat"
-        android:layout_gravity="bottom|end"
-        app:borderWidth="0dp"
-        android:layout_marginEnd="10dp"
-        android:layout_marginBottom="50dp"
-        android:backgroundTint="@color/floating_button"
-        app:srcCompat="@drawable/location"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|end"
+        android:layout_marginBottom="50dp"
+        android:layout_marginEnd="10dp"
+        android:backgroundTint="@color/floating_button"
+        app:borderWidth="0dp"
+        app:srcCompat="@drawable/location" />
 </FrameLayout>

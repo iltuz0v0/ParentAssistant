@@ -5,7 +5,6 @@ import android.content.Context;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.widget.Toast;
 
 import net.nel.il.parentassistant.AlertDialogService;
 import net.nel.il.parentassistant.R;
@@ -13,24 +12,24 @@ import net.nel.il.parentassistant.ToastManager;
 
 public class ProvidersService {
 
-    public boolean trackGPS(Activity context, LocationManager locationManager) {
+    public boolean trackGPS(Activity context,
+                            LocationManager locationManager, boolean isPermission) {
         boolean tracing = false;
-        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)
-                && MainActivity.isPermissionLocation) {
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER) && isPermission) {
             new AlertDialogService().createGPSRequest(context);
-        } else if (MainActivity.isPermissionLocation) {
+        }else if(isPermission){
             tracing = true;
         }
         return tracing;
     }
 
-    public boolean search(Activity context, LocationManager locationManager) {
+    public boolean search(Activity context,
+                          LocationManager locationManager, boolean isPermission) {
         boolean networkConnection = false;
-        if (trackGPS(context, locationManager) && hasInternetConnection(context)) {
+        if (trackGPS(context, locationManager, isPermission) && hasInternetConnection(context)) {
             networkConnection = true;
         } else if (!hasInternetConnection(context)) {
-            ToastManager.showToast(context.getResources()
-                    .getString(R.string.toast_turn_on_internet), context);
+            ToastManager.showToast(context.getResources().getString(R.string.toast_turn_on_internet), context);
 
         }
         return networkConnection;

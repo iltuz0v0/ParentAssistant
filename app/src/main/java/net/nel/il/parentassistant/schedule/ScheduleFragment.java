@@ -7,6 +7,7 @@ import android.app.Fragment;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -20,27 +21,21 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TimePicker;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.model.LatLng;
 
 import net.nel.il.parentassistant.R;
 import net.nel.il.parentassistant.ToastManager;
-import net.nel.il.parentassistant.model.OutputAccount;
 
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.List;
 
-public class ScheduleFragment extends Fragment
-        implements TabLayout.OnTabSelectedListener, View.OnClickListener,
-        TimePickerDialog.OnTimeSetListener, View.OnFocusChangeListener,
-        SubMapFragment.MapLocationCallback{
+public class ScheduleFragment extends Fragment implements TabLayout.OnTabSelectedListener, View.OnClickListener, TimePickerDialog.OnTimeSetListener, View.OnFocusChangeListener, SubMapFragment.MapLocationCallback {
 
     private ScheduleFragmentCallback scheduleFragmentCallback;
 
@@ -48,11 +43,15 @@ public class ScheduleFragment extends Fragment
 
     private LinearLayout eventContainer;
 
+    private FrameLayout mainFrame;
+
     private Button filter;
 
     private Button search;
 
     private Button sending;
+
+    private static final float Z = 90.0f;
 
     private LinearLayout filterContainer;
 
@@ -137,15 +136,21 @@ public class ScheduleFragment extends Fragment
     private int isTurned = NOT_TURNED;
 
 
-    public interface ScheduleFragmentCallback{
+    public interface ScheduleFragmentCallback {
         void block();
+
         void unblock();
+
         Context getAppContext();
+
         Location getLocation();
-        void sendAccountRequest(List<LatLng> points,
-                                String from, String to);
+
+        void sendAccountRequest(List<LatLng> points, String from, String to);
+
         void sendEventRequest(List<LatLng> points, String from, String to);
+
         EventQueue getEventQueue();
+
         void setScheduleFragmentState(boolean state, ScheduleFragment scheduleFragment);
     }
 
@@ -153,7 +158,7 @@ public class ScheduleFragment extends Fragment
     @SuppressWarnings("all")
     public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
         enableEditTextFields(true);
-        switch (editTextState){
+        switch (editTextState) {
             case FROM_EDIT_TEXT:
                 fromEditText.setText(String.format("%d:%d", hourOfDay, minute));
                 break;
@@ -171,11 +176,10 @@ public class ScheduleFragment extends Fragment
 
     @Override
     public void onFocusChange(View v, boolean hasFocus) {
-        if(hasFocus) {
+        if (hasFocus) {
             showTimePickerById(v.getId());
         }
     }
-
 
 
     @Override
@@ -202,7 +206,7 @@ public class ScheduleFragment extends Fragment
         outState.putInt(FILTER_CONTAINER_STATE, filterContainer.getVisibility());
         outState.putInt(ADDITION_CONTAINER_STATE, additionContainer.getVisibility());
         outState.putInt(SELECTED_TAB, selectedTab);
-        if(points.size() > 1){
+        if (points.size() > 1) {
             outState.putDouble(LAT_1, points.get(FIRST_CLICK).latitude);
             outState.putDouble(LNG_1, points.get(FIRST_CLICK).longitude);
             outState.putDouble(LAT_2, points.get(SECOND_CLICK).latitude);
@@ -214,10 +218,10 @@ public class ScheduleFragment extends Fragment
     @SuppressWarnings("all")
     public void onViewStateRestored(Bundle state) {
         super.onViewStateRestored(state);
-        if(state == null){
+        if (state == null) {
             return;
         }
-        if(state.getInt(PROGRESS_STATE) == View.VISIBLE){
+        if (state.getInt(PROGRESS_STATE) == View.VISIBLE) {
             progressBar.setVisibility(View.VISIBLE);
             filter.setVisibility(View.INVISIBLE);
         }
@@ -225,17 +229,15 @@ public class ScheduleFragment extends Fragment
         fromEditText2.setText(state.getString(FROM_TEXT_VIEW_2, ""));
         toEditText.setText(state.getString(TO_TEXT_VIEW, ""));
         toEditText2.setText(state.getString(TO_TEXT_VIEW_2, ""));
-        filterContainer.setVisibility(state.getInt(FILTER_CONTAINER_STATE,
-                View.INVISIBLE));
-        additionContainer.setVisibility(state.getInt(ADDITION_CONTAINER_STATE,
-                View.INVISIBLE));
+        filterContainer.setVisibility(state.getInt(FILTER_CONTAINER_STATE, View.INVISIBLE));
+        additionContainer.setVisibility(state.getInt(ADDITION_CONTAINER_STATE, View.INVISIBLE));
         searchContainer.setVisibility(state.getInt(SEARCH_CONTAINER, View.VISIBLE));
         eventContainer.setVisibility(state.getInt(EVENT_CONTAINER, View.INVISIBLE));
-        if(state.getDouble(LAT_1, -1.0) != -1.0){
+        if (state.getDouble(LAT_1, -1.0) != -1.0) {
             points.add(new LatLng(state.getDouble(LAT_1), state.getDouble(LNG_1)));
             points.add(new LatLng(state.getDouble(LAT_2), state.getDouble(LNG_2)));
         }
-        if(state.getInt(SELECTED_TAB, SEARCH_BUTTON) == EVENT_BUTTON){
+        if (state.getInt(SELECTED_TAB, SEARCH_BUTTON) == EVENT_BUTTON) {
             TabLayout.Tab tab = tabLayout.getTabAt(EVENT_BUTTON);
             tab.select();
         }
@@ -253,10 +255,9 @@ public class ScheduleFragment extends Fragment
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setHasOptionsMenu(true);
-        if(savedInstanceState != null){
+        if (savedInstanceState != null) {
             isTurned = TURNED;
         }
         final View view = inflater.inflate(R.layout.fragment_schedule, container, false);
@@ -289,7 +290,7 @@ public class ScheduleFragment extends Fragment
 
     @Override
     public void onTabSelected(TabLayout.Tab tab) {
-        switch (tab.getPosition()){
+        switch (tab.getPosition()) {
             case SEARCH_BUTTON:
                 selectedTab = SEARCH_BUTTON;
                 filterContainer.setVisibility(View.INVISIBLE);
@@ -320,7 +321,7 @@ public class ScheduleFragment extends Fragment
     @Override
     public void onClick(View v) {
         showTimePickerById(v.getId());
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.filter_button:
                 doFilter();
                 break;
@@ -342,38 +343,31 @@ public class ScheduleFragment extends Fragment
         }
     }
 
-    private void showTimePickerById(int id){
-        switch (id){
+    private void showTimePickerById(int id) {
+        switch (id) {
             case R.id.from_edit_text:
-                showTimePicker(FROM_EDIT_TEXT,
-                        context.getString(R.string.from_time_picker));
+                showTimePicker(FROM_EDIT_TEXT, context.getString(R.string.from_time_picker));
                 break;
             case R.id.to_edit_text:
-                showTimePicker(TO_EDIT_TEXT,
-                        context.getString(R.string.to_time_picker));
+                showTimePicker(TO_EDIT_TEXT, context.getString(R.string.to_time_picker));
                 break;
             case R.id.from_edit_text_2:
-                showTimePicker(FROM_EDIT_TEXT_2,
-                        context.getString(R.string.from_time_picker));
+                showTimePicker(FROM_EDIT_TEXT_2, context.getString(R.string.from_time_picker));
                 break;
             case R.id.to_edit_text_2:
-                showTimePicker(TO_EDIT_TEXT_2,
-                        context.getString(R.string.to_time_picker));
+                showTimePicker(TO_EDIT_TEXT_2, context.getString(R.string.to_time_picker));
                 break;
         }
     }
 
-    private void showTimePicker(int editText, String title){
-        if(isTurned == TURNED){
+    private void showTimePicker(int editText, String title) {
+        if (isTurned == TURNED) {
             isTurned = NOT_TURNED;
             return;
         }
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(System.currentTimeMillis());
-        TimePickerDialog dialog = new TimePickerDialog(getActivity(),
-                AlertDialog.THEME_DEVICE_DEFAULT_LIGHT,this,
-                calendar.get(Calendar.HOUR),
-                calendar.get(Calendar.MINUTE), true);
+        TimePickerDialog dialog = new TimePickerDialog(getActivity(), AlertDialog.THEME_DEVICE_DEFAULT_LIGHT, this, calendar.get(Calendar.HOUR), calendar.get(Calendar.MINUTE), true);
         dialog.setTitle(title);
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
@@ -392,83 +386,76 @@ public class ScheduleFragment extends Fragment
         dialog.show();
     }
 
-    private void enableEditTextFields(boolean enable){
+    private void enableEditTextFields(boolean enable) {
         fromEditText.setEnabled(enable);
         toEditText.setEnabled(enable);
     }
 
-    private void doFilter(){
-        if(filterContainer.getVisibility() == View.INVISIBLE){
+    private void doFilter() {
+        if (filterContainer.getVisibility() == View.INVISIBLE) {
             filterContainer.setVisibility(View.VISIBLE);
-        }
-        else{
+        } else {
             filterContainer.setVisibility(View.INVISIBLE);
             clearFields();
         }
     }
 
-    private void clearFields(){
+    private void clearFields() {
         toEditText.setText("");
         fromEditText.setText("");
         points.clear();
     }
 
-    private void doChoice(){
+    private void doChoice() {
         SubMapFragment subMapFragment = new SubMapFragment();
-        getFragmentManager().beginTransaction()
-                .add(R.id.main_frame, subMapFragment)
-                .addToBackStack(null).commit();
+        getFragmentManager().beginTransaction().add(R.id.main_frame, subMapFragment).addToBackStack(null).commit();
         subMapFragment.setReference(this);
     }
 
-    private void doSearch(){
-        if(progressBar.getVisibility() != View.VISIBLE) {
+    private void doSearch() {
+        if (progressBar.getVisibility() != View.VISIBLE) {
             if (ifFieldsFilled(fromEditText, toEditText)) {
                 filterContainer.setVisibility(View.INVISIBLE);
                 progressBar.setVisibility(View.VISIBLE);
                 filter.setEnabled(false);
-                scheduleFragmentCallback.sendAccountRequest(points,
-                        fromEditText.getText().toString(), toEditText.getText().toString());
+                scheduleFragmentCallback.sendAccountRequest(points, fromEditText.getText().toString(), toEditText.getText().toString());
             } else {
                 ToastManager.showToast(context.getString(R.string.not_filled), context);
             }
         }
     }
 
-    private void doSending(){
-        if(ifFieldsFilled(fromEditText2, toEditText2)){
-            scheduleFragmentCallback.sendEventRequest(points,
-                    fromEditText2.getText().toString(), toEditText2.getText().toString());
+    private void doSending() {
+        if (ifFieldsFilled(fromEditText2, toEditText2)) {
+            scheduleFragmentCallback.sendEventRequest(points, fromEditText2.getText().toString(), toEditText2.getText().toString());
             additionContainer.setVisibility(View.INVISIBLE);
-        }
-        else{
+        } else {
             ToastManager.showToast(context.getString(R.string.not_filled), context);
         }
     }
 
-    private boolean ifFieldsFilled(EditText fromEditText, EditText toEditText){
-        return !TextUtils.isEmpty(fromEditText.getText().toString())
-                && !TextUtils.isEmpty(toEditText.getText().toString())
-                && points != null && points.size() > 0;
+    private boolean ifFieldsFilled(EditText fromEditText, EditText toEditText) {
+        return !TextUtils.isEmpty(fromEditText.getText().toString()) && !TextUtils.isEmpty(toEditText.getText().toString()) && points != null && points.size() > 0;
     }
 
-    private void doEvent(){
-        if(additionContainer.getVisibility() == View.INVISIBLE){
+    private void doEvent() {
+        if (additionContainer.getVisibility() == View.INVISIBLE) {
             additionContainer.setVisibility(View.VISIBLE);
-        }
-        else{
+        } else {
             additionContainer.setVisibility(View.INVISIBLE);
             clearFields();
         }
     }
 
-    public void setOutputAccount(boolean state){
+    public void setOutputAccount(boolean state) {
         progressBar.setVisibility(View.INVISIBLE);
         filter.setEnabled(true);
         searchFragment.setOutputAccount(state);
     }
 
-    private void initialization(View view){
+    private void initialization(View view) {
+        mainFrame = (FrameLayout) view.findViewById(R.id.main_frame);
+        mainFrame.setZ(Z);
         additionContainer = (LinearLayout) view.findViewById(R.id.addition_container);
         search = (Button) view.findViewById(R.id.search_acc);
         search.setOnClickListener(this);

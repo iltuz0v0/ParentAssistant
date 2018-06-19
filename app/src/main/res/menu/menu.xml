@@ -3,22 +3,22 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
         android:id="@+id/settings"
-        android:title="@string/settings"
         android:orderInCategory="1"
-        app:showAsAction="never"/>
+        android:title="@string/settings"
+        app:showAsAction="never" />
     <item
         android:id="@+id/signed_in"
-        android:title="@string/logout"
         android:orderInCategory="2"
+        android:title="@string/logout"
         app:showAsAction="never" />
     <item
         android:id="@+id/account"
+        android:icon="@drawable/account"
         android:title="@string/account"
-        app:showAsAction="ifRoom|withText"
-        android:icon="@drawable/account"/>
+        app:showAsAction="ifRoom|withText" />
     <item
         android:id="@+id/schedule"
+        android:icon="@drawable/schedule"
         android:title="@string/setting_schedule"
-        app:showAsAction="ifRoom"
-        android:icon="@drawable/schedule" />
+        app:showAsAction="ifRoom" />
 </menu>

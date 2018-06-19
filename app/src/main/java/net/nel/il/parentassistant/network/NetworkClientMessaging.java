@@ -83,14 +83,10 @@ public class NetworkClientMessaging {
 
     public static final String DEFAULT_OUTPUT_JSON = "{\"id\":-1}";
 
-    NetworkClientMessaging(Context context, ConnectionStateListener connectionStateListener,
-                                  MarkerStateListener markerReceiver,
-                                  Messaging messaging) {
+    NetworkClientMessaging(Context context, ConnectionStateListener connectionStateListener, MarkerStateListener markerReceiver, Messaging messaging) {
         this.connectionStateListener = connectionStateListener;
         this.messaging = messaging;
-        accountDataHandler = new AccountDataHandler(
-                new FileManager(context.getResources()
-                        .getString(R.string.user_data_file)));
+        accountDataHandler = new AccountDataHandler(new FileManager(context.getResources().getString(R.string.user_data_file)));
         this.markerReceiver = markerReceiver;
         this.context = context;
         identifiers = new TreeSet<>();
@@ -99,60 +95,54 @@ public class NetworkClientMessaging {
     public OutputAccount sendDataRequest() {
         Location currentLocation = markerReceiver.getLocation();
         OutputAccount account;
-        if(currentLocation != null) {
+        if (currentLocation != null) {
             account = sendDataRequest(currentLocation);
-        }else {
+        } else {
             account = new OutputAccount();
             account.setId(NetworkClient.UPDATE);
         }
         return account;
     }
 
-    private OutputAccount sendDataRequest(Location currentLocation){
+    private OutputAccount sendDataRequest(Location currentLocation) {
         OutputAccount account;
         int identifier = SharedPreferenceManager.getIdentifier(context);
         boolean isDataUpdated = SharedPreferenceManager.isUpdated(context);
         if (identifier == NO_IDENTIFIER) {
-            account = sendDataRequest(NetworkClient.ACCOUNT_CREATING,
-                    identifier, currentLocation);
+            account = sendDataRequest(NetworkClient.ACCOUNT_CREATING, identifier, currentLocation);
         } else {
             if (isDataUpdated) {
-                account = sendDataRequest(NetworkClient.UPDATE,
-                        identifier, currentLocation);
+                account = sendDataRequest(NetworkClient.UPDATE, identifier, currentLocation);
             } else {
-                account = sendDataRequest(NetworkClient.GETTING_DATA, identifier,
-                        currentLocation);
+                account = sendDataRequest(NetworkClient.GETTING_DATA, identifier, currentLocation);
             }
         }
         return account;
     }
 
-    private OutputAccount sendDataRequest(int id,
-                                          int identifier, Location currentLocation) {
+    private OutputAccount sendDataRequest(int id, int identifier, Location currentLocation) {
         String json = translateToJSON(id, identifier, currentLocation);
         System.out.println("input json " + json);
         String outputJson = sendHttpRequest(json, DEFAULT_ADDRESS);
         System.out.println("output json" + outputJson);
         OutputAccount account = translateFromJson(outputJson);
         getMessages(account);
-        if(account.getId() == NetworkClient.ACCOUNT_CREATING){
+        if (account.getId() == NetworkClient.ACCOUNT_CREATING) {
             SharedPreferenceManager.saveIdentifier(account.getIdentifier(), context);
         }
-        if(account.getId() == NetworkClient.GETTING_DATA){
+        if (account.getId() == NetworkClient.GETTING_DATA) {
             outputServerData(account);
         }
         return account;
     }
 
-    private String translateToJSON(int id,
-                                   int identifier, Location currentLocation) {
+    private String translateToJSON(int id, int identifier, Location currentLocation) {
         Gson gson = new Gson();
-        InputAccount account = getDefaultInputAccount(id, identifier,
-                currentLocation, NetworkClient.companionId);
+        InputAccount account = getDefaultInputAccount(id, identifier, currentLocation, NetworkClient.companionId);
         if (id == NetworkClient.ACCOUNT_CREATING || id == NetworkClient.UPDATE) {
             getAccountData(account);
         }
-        if(id == NetworkClient.ACCOUNT_CREATING){
+        if (id == NetworkClient.ACCOUNT_CREATING) {
             SharedPreferenceManager.getGoogleIdentifier(account, context);
         }
         if (id == NetworkClient.GETTING_DATA) {
@@ -162,30 +152,20 @@ public class NetworkClientMessaging {
         return gson.toJson(account);
     }
 
-    private InputAccount getDefaultInputAccount(int id, int identifier,
-                                                Location currentLocation,
-                                                int companionId){
-        return new InputAccount(id, identifier,
-                (float) (MapManager.defaultCircleRadius * MapManager.courseMeter),
-                currentLocation.getLatitude(),
-                currentLocation.getLongitude(), companionId);
+    private InputAccount getDefaultInputAccount(int id, int identifier, Location currentLocation, int companionId) {
+        return new InputAccount(id, identifier, (float) (MapManager.defaultCircleRadius * MapManager.courseMeter), currentLocation.getLatitude(), currentLocation.getLongitude(), companionId);
     }
 
-    private InputAccount getDefaultInputAccount(int id, int identifier,
-                                                Location currentLocation){
-        return new InputAccount(id, identifier,
-                (float) (MapManager.defaultCircleRadius * MapManager.courseMeter),
-                currentLocation.getLatitude(),
-                currentLocation.getLongitude());
+    private InputAccount getDefaultInputAccount(int id, int identifier, Location currentLocation) {
+        return new InputAccount(id, identifier, (float) (MapManager.defaultCircleRadius * MapManager.courseMeter), currentLocation.getLatitude(), currentLocation.getLongitude());
     }
 
-    private void addMessagesAmount(InputAccount inputAccount){
+    private void addMessagesAmount(InputAccount inputAccount) {
         inputAccount.setMessagesAmount(messaging.getOuterMessagesAmount());
     }
 
-    private void getMessages(OutputAccount outputAccount){
-        if(outputAccount != null && outputAccount.getMessages() != null &&
-                outputAccount.getMessages().size() > 0) {
+    private void getMessages(OutputAccount outputAccount) {
+        if (outputAccount != null && outputAccount.getMessages() != null && outputAccount.getMessages().size() > 0) {
             messaging.addOuterMessages(outputAccount);
             connectionStateListener.redirectRefreshingChat(CHAT_REFRESHING);
         }
@@ -208,7 +188,7 @@ public class NetworkClientMessaging {
             }
         }
         if (list.size() > 0) {
-            for(Integer element : list){
+            for (Integer element : list) {
                 identifiers.remove(element);
             }
             deleteMarker(list);
@@ -218,13 +198,11 @@ public class NetworkClientMessaging {
     private void getAccountData(InputAccount account) {
         SharedPreferenceManager.getGoogleIdentifier(account, context);
         String[] mapTags = context.getResources().getStringArray(R.array.mapTags);
-        ArrayList<HashMap<String, Object>> data = accountDataHandler.handleData(context,
-                mapTags);
+        ArrayList<HashMap<String, Object>> data = accountDataHandler.handleData(context, mapTags);
         handleAccountData(data, mapTags, account);
     }
 
-    private void handleAccountData(ArrayList<HashMap<String, Object>> data,
-                                   String[] mapTags, InputAccount account) {
+    private void handleAccountData(ArrayList<HashMap<String, Object>> data, String[] mapTags, InputAccount account) {
         ArrayList<String> names = new ArrayList<>();
         ArrayList<String> ages = new ArrayList<>();
         ArrayList<String> hobbies = new ArrayList<>();
@@ -260,13 +238,13 @@ public class NetworkClientMessaging {
     }
 
     private String sendHttpRequest(final String json, String address) {
-        if(!hasInternetConnection(context)){
-            if(isInternet) {
+        if (!hasInternetConnection(context)) {
+            if (isInternet) {
                 isInternet = false;
                 connectionStateListener.redirectOperation(NetworkClient.NO_INTERNET);
             }
             return DEFAULT_OUTPUT_JSON;
-        }else{
+        } else {
             isInternet = true;
         }
         final StringBuilder outputJson = new StringBuilder();
@@ -284,8 +262,7 @@ public class NetworkClientMessaging {
             writer.flush();
             writer.close();
             connection.connect();
-            reader = new BufferedReader(new InputStreamReader(
-                    connection.getInputStream()));
+            reader = new BufferedReader(new InputStreamReader(connection.getInputStream()));
             String buffer;
             while ((buffer = reader.readLine()) != null) {
                 outputJson.append(buffer);
@@ -298,7 +275,7 @@ public class NetworkClientMessaging {
             } catch (InterruptedException e1) {
                 e1.printStackTrace();
             }
-            sendHttpRequest(json, address);
+            return DEFAULT_OUTPUT_JSON;
         } finally {
             try {
                 if (reader != null) {
@@ -340,7 +317,7 @@ public class NetworkClientMessaging {
         sendHttpRequest(json, DEFAULT_ADDRESS);
     }
 
-    public String sendMessage(String message, int companionId){
+    public String sendMessage(String message, int companionId) {
         String json = translateToMessageJSON(message, companionId);
         return sendHttpRequest(json, DEFAULT_ADDRESS);
     }
@@ -364,8 +341,7 @@ public class NetworkClientMessaging {
         return gson.toJson(account);
     }
 
-    private String translateToMinJSON(int id, List<LatLng> points, String from,
-                                      String to) {
+    private String translateToMinJSON(int id, List<LatLng> points, String from, String to) {
         Gson gson = new Gson();
         InputAccount account = new InputAccount();
         account.setId(id);
@@ -402,55 +378,39 @@ public class NetworkClientMessaging {
         InputAccount account = new InputAccount();
         account.setId(id);
         SharedPreferenceManager.getGoogleIdentifier(account, context);
-        if(isIdentifier) {
+        if (isIdentifier) {
             account.setIdentifier(SharedPreferenceManager.getIdentifier(context));
         }
         return gson.toJson(account);
     }
 
-    private void refreshMarker(int element, OutputAccount account,
-                               List<Integer> peopleIdentifiers) {
-        connectionStateListener.redirectMarkerRefreshing(MARKER_REFRESHING,
-                new InfoAccount(peopleIdentifiers.get(element),
-                        account.getPeopleLatitudes().get(element),
-                        account.getPeopleLongitudes().get(element),
-                        account.getPeopleStatuses().get(element)));
+    private void refreshMarker(int element, OutputAccount account, List<Integer> peopleIdentifiers) {
+        connectionStateListener.redirectMarkerRefreshing(MARKER_REFRESHING, new InfoAccount(peopleIdentifiers.get(element), account.getPeopleLatitudes().get(element), account.getPeopleLongitudes().get(element), account.getPeopleStatuses().get(element)));
     }
 
-    private void addMarker(int element, OutputAccount account,
-                           List<Integer> peopleIdentifiers) {
-        connectionStateListener.redirectMarkerAddition(MARKER_ADDITION,
-                new InfoAccount(peopleIdentifiers.get(element),
-                        account.getName().get(element),
-                        account.getAge().get(element),
-                        account.getHobbies().get(element),
-                        account.getPhotos().get(element),
-                        account.getPeopleLatitudes().get(element),
-                        account.getPeopleLongitudes().get(element),
-                        account.getPeopleStatuses().get(element)));
+    private void addMarker(int element, OutputAccount account, List<Integer> peopleIdentifiers) {
+        connectionStateListener.redirectMarkerAddition(MARKER_ADDITION, new InfoAccount(peopleIdentifiers.get(element), account.getName().get(element), account.getAge().get(element), account.getHobbies().get(element), account.getPhotos().get(element), account.getPeopleLatitudes().get(element), account.getPeopleLongitudes().get(element), account.getPeopleStatuses().get(element)));
     }
 
     private void deleteMarker(Set<Integer> markers) {
-        connectionStateListener.redirectMarkerDeleting(MARKER_DELETING,
-                markers);
+        connectionStateListener.redirectMarkerDeleting(MARKER_DELETING, markers);
     }
 
-    public void timeExceed(int id, int companionId){
+    public void timeExceed(int id, int companionId) {
         String json = translateToMinJSON(id, companionId);
         sendHttpRequest(json, DEFAULT_ADDRESS);
     }
 
-    public void sendFirstRequest(int id){
-        if(SharedPreferenceManager.getIdentifier(context) != NO_IDENTIFIER) {
+    public void sendFirstRequest(int id) {
+        if (SharedPreferenceManager.getIdentifier(context) != NO_IDENTIFIER) {
             String json = translateToMinJSON(id);
             sendHttpRequest(json, DEFAULT_ADDRESS);
         }
     }
 
-    public void doAlertNegative(int id){
+    public void doAlertNegative(int id) {
         Gson gson = new Gson();
-        InputAccount account = getDefaultInputAccount(id, -1,
-                markerReceiver.getLocation());
+        InputAccount account = getDefaultInputAccount(id, -1, markerReceiver.getLocation());
         getAccountData(account);
         SharedPreferenceManager.getGoogleIdentifier(account, context);
         String json = gson.toJson(account);
@@ -459,27 +419,24 @@ public class NetworkClientMessaging {
         SharedPreferenceManager.saveIdentifier(outputAccount.getIdentifier(), context);
     }
 
-    public boolean doAlertPositive(int id){
+    public boolean doAlertPositive(int id) {
         boolean result;
         String json = translateToMinJSON(id, false);
         String outputJSON = sendHttpRequest(json, DEFAULT_ADDRESS);
-        if(!outputJSON.equals(DEFAULT_OUTPUT_JSON)) {
+        if (!outputJSON.equals(DEFAULT_OUTPUT_JSON)) {
             Gson gson = new Gson();
             OutputAccount outputAccount = gson.fromJson(outputJSON, OutputAccount.class);
             SharedPreferenceManager.saveIdentifier(outputAccount.getIdentifier(), context);
-            new FileManager(context.getString(R.string.user_data_file))
-                    .saveUserDataFromServer(outputAccount, context);
+            new FileManager(context.getString(R.string.user_data_file)).saveUserDataFromServer(outputAccount, context);
             result = true;
-        }
-        else{
+        } else {
             result = false;
         }
         return result;
     }
 
-    public OutputAccount sendAccountRequest(int id, List<LatLng> points, String from,
-                                   String to){
-        if(SharedPreferenceManager.getIdentifier(context) != NO_IDENTIFIER) {
+    public OutputAccount sendAccountRequest(int id, List<LatLng> points, String from, String to) {
+        if (SharedPreferenceManager.getIdentifier(context) != NO_IDENTIFIER) {
             String json = translateToMinJSON(id, points, from, to);
             Gson gson = new Gson();
             return gson.fromJson(sendHttpRequest(json, SPECIAL_ADDRESS), OutputAccount.class);

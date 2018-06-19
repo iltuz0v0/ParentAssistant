@@ -7,7 +7,7 @@ import android.widget.TextView;
 
 import net.nel.il.parentassistant.R;
 
-public class SearchingViewHolder extends RecyclerView.ViewHolder{
+public class SearchingViewHolder extends RecyclerView.ViewHolder {
 
     TextView fromTextView;
 

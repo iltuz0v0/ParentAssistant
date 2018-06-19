@@ -8,19 +8,19 @@ public class EventQueue {
 
     private final Object blockingObject;
 
-    public EventQueue(){
+    public EventQueue() {
         blockingObject = new Object();
         outputAccount = new OutputAccount();
     }
 
-    public OutputAccount getOutputObject(){
-        synchronized (blockingObject){
+    public OutputAccount getOutputObject() {
+        synchronized (blockingObject) {
             return new OutputAccount(outputAccount);
         }
     }
 
-    public void setOutputObject(OutputAccount outputObject){
-        synchronized (blockingObject){
+    public void setOutputObject(OutputAccount outputObject) {
+        synchronized (blockingObject) {
             outputAccount = new OutputAccount(outputObject);
         }
     }

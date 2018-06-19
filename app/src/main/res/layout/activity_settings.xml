@@ -1,39 +1,42 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".settings.SettingsActivity">
+
     <TextView
         android:id="@+id/radius"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="@string/radius_text_view"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="30dp"
-        android:layout_marginStart="15dp" />
+        android:text="@string/radius_text_view" />
+
     <SeekBar
         android:id="@+id/radiusSeekBar"
         android:layout_width="120dp"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@+id/radius"
-        android:max="3000"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="30dp"
-        android:layout_marginStart="15dp" />
+        android:layout_toEndOf="@+id/radius"
+        android:max="3000" />
+
     <TextView
         android:id="@+id/radiusSeekBarProgress"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/radiusSeekBar"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="30dp"
-        android:layout_marginStart="15dp" />
+        android:layout_toEndOf="@id/radiusSeekBar" />
+
     <Button
         android:id="@+id/radiusConfirmation"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_toEndOf="@id/radiusSeekBarProgress"
-        android:text="@string/confirm_button"
-        android:backgroundTint="@color/button"
+        android:layout_marginStart="15dp"
         android:layout_marginTop="15dp"
-        android:layout_marginStart="15dp" />
+        android:layout_toEndOf="@id/radiusSeekBarProgress"
+        android:backgroundTint="@color/button"
+        android:text="@string/confirm_button" />
 </RelativeLayout>

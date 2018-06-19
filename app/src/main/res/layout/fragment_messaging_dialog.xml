@@ -1,57 +1,63 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/messaging_container"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:background="@color/background"
+    android:orientation="vertical"
     tools:context=".Messaging.MessagingFragment">
+
     <TextView
-        android:text="@string/messages"
-        android:background="@color/messaging_title"
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
         android:layout_gravity="top"
+        android:background="@color/messaging_title"
+        android:gravity="center"
+        android:paddingBottom="15dp"
         android:paddingLeft="30dp"
         android:paddingRight="30dp"
         android:paddingTop="15dp"
-        android:paddingBottom="15dp"
-        android:gravity="center"
-        android:textSize="20sp"
-        android:layout_width="match_parent"
-        android:layout_height="60dp" />
+        android:text="@string/messages"
+        android:textSize="20sp" />
+
     <android.support.v7.widget.RecyclerView
-        android:background="@color/background"
-        android:layout_marginTop="60dp"
         android:id="@+id/messaging_recycle_view"
         android:layout_width="match_parent"
-        android:layout_marginBottom="60dp"
-        android:layout_height="match_parent"/>
-    <LinearLayout
-        android:orientation="horizontal"
-        android:layout_gravity="bottom"
-        android:layout_width="match_parent"
-        android:layout_height="60dp">
-    <EditText
-        android:hint="@string/hint_your_message_edit_text"
-        android:background="@drawable/edit_text_border"
-        android:layout_weight="7"
-        android:layout_gravity="bottom|start"
-        android:id="@+id/messaging_edit_text"
-        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:padding="3dp"
-        android:inputType="textMultiLine|textCapSentences"
-        android:scrollbars="vertical"
-        android:gravity="top|start"
-        android:minLines="2"
-        android:maxLines="3"/>
-    <Button
-        android:text="@string/send"
-        android:elevation="10dp"
-        android:background="@drawable/button"
-        android:layout_weight="1"
-        android:id="@+id/messaging_button"
-        android:layout_width="wrap_content"
-        android:layout_height="match_parent" />
+        android:layout_marginBottom="60dp"
+        android:layout_marginTop="60dp"
+        android:background="@color/background" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:layout_gravity="bottom"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/messaging_edit_text"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_gravity="bottom|start"
+            android:layout_weight="7"
+            android:background="@drawable/edit_text_border"
+            android:gravity="top|start"
+            android:hint="@string/hint_your_message_edit_text"
+            android:inputType="textMultiLine|textCapSentences"
+            android:maxLines="3"
+            android:minLines="2"
+            android:padding="3dp"
+            android:scrollbars="vertical" />
+
+        <Button
+            android:id="@+id/messaging_button"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:background="@drawable/button"
+            android:elevation="10dp"
+            android:text="@string/send" />
     </LinearLayout>
 
 </FrameLayout>

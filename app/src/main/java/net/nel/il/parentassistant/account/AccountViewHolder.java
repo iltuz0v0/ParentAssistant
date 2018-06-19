@@ -6,9 +6,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import net.nel.il.parentassistant.R;
-import net.nel.il.parentassistant.interfaces.AdapterStateListener;
 
-public class AccountViewHolder extends RecyclerView.ViewHolder{
+public class AccountViewHolder extends RecyclerView.ViewHolder {
 
     ImageView elementDeleting;
 

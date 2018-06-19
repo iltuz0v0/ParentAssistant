@@ -4,7 +4,6 @@ import android.location.Location;
 
 import net.nel.il.parentassistant.model.InfoAccount;
 
-import java.util.List;
 import java.util.Set;
 
 public interface MarkerStateListener {

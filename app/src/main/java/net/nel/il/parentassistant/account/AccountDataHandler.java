@@ -51,10 +51,10 @@ public class AccountDataHandler {
         this.fileManager = fileManager;
     }
 
-    public List<Note>getData(Context context, String[] mapTags){
+    public List<Note> getData(Context context, String[] mapTags) {
         List<Note> notes = new ArrayList<>();
         ArrayList<HashMap<String, Object>> data = handleData(context, mapTags);
-        for(HashMap<String, Object> dataElement : data){
+        for (HashMap<String, Object> dataElement : data) {
             int index = 0;
             Note note = new Note();
             note.deletingResource = R.drawable.delete_element;
@@ -67,8 +67,7 @@ public class AccountDataHandler {
         return notes;
     }
 
-    public ArrayList<HashMap<String, Object>> handleData(Context context,
-                                                         String[] mapTags) {
+    public ArrayList<HashMap<String, Object>> handleData(Context context, String[] mapTags) {
         data.clear();
         ArrayList<HashMap<String, Object>> dataCopy;
         dataCopy = fileManager.getUserData(context);
@@ -93,24 +92,23 @@ public class AccountDataHandler {
         return data;
     }
 
-    public void saveNote(Context context, List<String> accountData,
-                         String[] mapTags) {
+    public void saveNote(Context context, List<String> accountData, String[] mapTags) {
         String[] accountDataCopy = new String[ACCOUNT_FIELDS_AMOUNT];
         if (uploadedBitmap == null) {
             accountDataCopy[0] = DEFAULT_VALUE;
         } else {
             accountDataCopy[0] = bitmapName;
         }
-        for(int element = 0; element < accountData.size(); element++){
+        for (int element = 0; element < accountData.size(); element++) {
             String accountElement = accountData.get(element);
             if (accountElement.equals(EMPTY) || accountElement.equals(SPACE)) {
-                accountDataCopy[element+1] = DOUBLE_SPACE;
-            }
-            else{
-                accountDataCopy[element+1] = accountElement;
+                accountDataCopy[element + 1] = DOUBLE_SPACE;
+            } else {
+                accountDataCopy[element + 1] = accountElement;
             }
         }
         fileManager.saveUserData(context, mapTags, accountDataCopy);
+        uploadedBitmap = null;
     }
 
     public void deleteNote(Context context, int position) {
@@ -124,11 +122,8 @@ public class AccountDataHandler {
 
     private String uploadBitmapFromGallery(Context context, Intent data) {
         Uri selectedImage = data.getData();
-        try (BufferedOutputStream writer = new BufferedOutputStream(
-                context.openFileOutput(DEFAULT_NAME + this.data.size()
-                        + DEFAULT_EXPANSION, Context.MODE_PRIVATE))) {
-            uploadedBitmap = MediaStore.Images.Media.getBitmap(
-                    context.getContentResolver(), selectedImage);
+        try (BufferedOutputStream writer = new BufferedOutputStream(context.openFileOutput(DEFAULT_NAME + this.data.size() + DEFAULT_EXPANSION, Context.MODE_PRIVATE))) {
+            uploadedBitmap = MediaStore.Images.Media.getBitmap(context.getContentResolver(), selectedImage);
             uploadedBitmap.compress(Bitmap.CompressFormat.JPEG, QUALITY_COMPRESS, writer);
         } catch (IOException e) {
             e.printStackTrace();
@@ -138,8 +133,7 @@ public class AccountDataHandler {
 
     private Bitmap getDefaultBitmap(Context context) {
         Drawable drawable = ContextCompat.getDrawable(context, R.drawable.default_face);
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
-                drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
@@ -148,8 +142,7 @@ public class AccountDataHandler {
 
     private Bitmap uploadBitmap(Context context, String photoSource) {
         Bitmap photoBitmap = getDefaultBitmap(context);
-        try (BufferedInputStream inputStream =
-                     new BufferedInputStream(context.openFileInput(photoSource))) {
+        try (BufferedInputStream inputStream = new BufferedInputStream(context.openFileInput(photoSource))) {
             photoBitmap = BitmapFactory.decodeStream(inputStream);
         } catch (IOException e) {
             e.printStackTrace();
@@ -157,7 +150,7 @@ public class AccountDataHandler {
         return photoBitmap;
     }
 
-    public void clearData(){
+    public void clearData() {
         data.clear();
     }
 

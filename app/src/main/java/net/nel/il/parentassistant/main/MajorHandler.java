@@ -4,10 +4,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.location.Location;
 import android.location.LocationManager;
-import android.net.Network;
 import android.os.Handler;
 import android.os.Message;
-import android.widget.Toast;
 
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.model.LatLng;
@@ -17,12 +15,12 @@ import net.nel.il.parentassistant.Messaging.MessagingFragment;
 import net.nel.il.parentassistant.R;
 import net.nel.il.parentassistant.ToastManager;
 import net.nel.il.parentassistant.interfaces.ConnectionStateListener;
-import net.nel.il.parentassistant.model.OutputAccount;
-import net.nel.il.parentassistant.network.NetworkClient;
 import net.nel.il.parentassistant.interfaces.LocationReceiver;
 import net.nel.il.parentassistant.interfaces.MarkerStateListener;
 import net.nel.il.parentassistant.location.GPSManager;
 import net.nel.il.parentassistant.model.InfoAccount;
+import net.nel.il.parentassistant.model.OutputAccount;
+import net.nel.il.parentassistant.network.NetworkClient;
 import net.nel.il.parentassistant.schedule.EventQueue;
 import net.nel.il.parentassistant.schedule.ScheduleFragment;
 
@@ -30,8 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 
-public class MajorHandler implements LocationReceiver,
-        MarkerStateListener, ConnectionStateListener {
+public class MajorHandler implements LocationReceiver, MarkerStateListener, ConnectionStateListener {
 
     private ProvidersService providersService;
 
@@ -75,21 +72,28 @@ public class MajorHandler implements LocationReceiver,
 
     private boolean isAccountTrying = false;
 
-    MajorHandler(Context context, LocationManager locationManager,
-                 MapFragment map, Handler mainActivityHandler) {
+    private boolean isConnection = false;
+
+    MajorHandler(Context context, LocationManager locationManager, MapFragment map, Handler mainActivityHandler) {
         blockingObject = new Object();
         variablesInitialization(context, locationManager, map, mainActivityHandler);
     }
 
-    public void beginTracingGPS(Activity context) {
-        isGPS = providersService.trackGPS(context, locationManager);
-        if (isGPS && MainActivity.isPermissionLocation) {
-            runGPSTracing(context);
+
+    public void beginTrackingGPS(MainActivity context, boolean isPermission) {
+        context.checkPermissions();
+        isGPS = providersService.trackGPS(context, locationManager, isPermission);
+        if (isGPS && isPermission) {
+            if(!isConnection) {
+                runGPSTracing(context);
+                isConnection = true;
+            }
         }
     }
 
-    public void beginSearching(Activity context) {
-        if (providersService.search(context, locationManager)) {
+    public void beginSearching(MainActivity context, boolean isPermission) {
+        context.checkPermissions();
+        if (providersService.search(context, locationManager, isPermission)) {
             if (!isRunningNetworkClient) {
                 isStarted = true;
                 networkClient.startNetworkClient();
@@ -105,7 +109,9 @@ public class MajorHandler implements LocationReceiver,
 
     private void runGPSTracing(Context context) {
         Location lastLocation = gpsManager.findLocation(context, this);
-        mapManager.setAdjustedLocation(lastLocation, context);
+        if(lastLocation != null) {
+            mapManager.setAdjustedLocation(lastLocation, context);
+        }
     }
 
     public void changeRadius(Context context) {
@@ -117,13 +123,13 @@ public class MajorHandler implements LocationReceiver,
         mapManager.adjustLocation(currentLocation);
     }
 
-    public void findCurrentLocation(){
+    public void findCurrentLocation() {
         mapManager.findCurrentLocation();
     }
 
-    public void refreshChat(){
+    public void refreshChat() {
         synchronized (blockingObject) {
-            if (mainActivityHandler == null){
+            if (mainActivityHandler == null) {
                 while (isNullHandler) {
                     continue;
                 }
@@ -140,16 +146,19 @@ public class MajorHandler implements LocationReceiver,
         }
     }
 
-    public void setMessagingDialogState(boolean state, MessagingFragment messagingFragment){
+    public void setMessagingDialogState(boolean state, MessagingFragment messagingFragment) {
         this.messagingFragment = messagingFragment;
+        this.messagingDialogState = state;
+    }
+
+    public void setMessagingDialogState(boolean state) {
         this.messagingDialogState = state;
     }
 
     public void finishRequest() {
         if (networkClient.isBeginRequestTo()) {
             networkClient.setEndRequestTo();
-        }
-        else {
+        } else {
             if (!networkClient.isEndRequestFrom()) {
                 networkClient.setEndRequestFrom();
             }
@@ -174,24 +183,24 @@ public class MajorHandler implements LocationReceiver,
         mapManager.unblockEverything();
     }
 
-    public void setClose(){
+    public void setClose() {
         mapManager.unblockEverything();
         networkClient.close();
     }
 
-    public void blockEverything(){
+    public void blockEverything() {
         mapManager.blockEverything();
     }
 
-    public void unblockEverything(){
+    public void unblockEverything() {
         mapManager.unblockEverything();
     }
 
-    public int illuminateMarker(int id){
+    public int illuminateMarker(int id) {
         return mapManager.illuminateMarker(id);
     }
 
-    public void buildPossibleRoute(int id){
+    public void buildPossibleRoute(int id) {
         mapManager.buildPossibleRoute(id);
     }
 
@@ -219,82 +228,71 @@ public class MajorHandler implements LocationReceiver,
         sendMainActivityHandlerMessage(IS_REQUEST_TO, id, -1);
     }
 
-    public void sendCompanionRequest(int companionId, int type){
+    public void sendCompanionRequest(int companionId, int type) {
         networkClient.setBeginRequestTo(true, companionId, type);
         mapManager.blockEverything();
     }
 
     private void sendRequestFrom(int code, int arg1, int arg2) {
-        sendMainActivityHandlerMessage(code,
-                arg1, arg2);
+        sendMainActivityHandlerMessage(code, arg1, arg2);
     }
 
-    public void openMessagingDialog(Activity context){
-        context.getFragmentManager().beginTransaction().add(
-                R.id.main_layout, messagingFragment).addToBackStack(null).commit();
+    public void openMessagingDialog(Activity context) {
+        context.getFragmentManager().beginTransaction().add(R.id.main_layout, messagingFragment).addToBackStack(null).commit();
     }
 
-    public void openScheduleFragment(Activity context){
-        if(!isStarted){
-            ToastManager.showToast(context
-                    .getString(R.string.toast_start_search), context);
-        }
-        else{
-            context.getFragmentManager().beginTransaction().add(
-                    R.id.main_layout, scheduleFragment)
-                    .addToBackStack(null).commit();
+    public void openScheduleFragment(Activity context) {
+        if (!isStarted) {
+            ToastManager.showToast(context.getString(R.string.toast_start_search), context);
+        } else {
+            context.getFragmentManager().beginTransaction().add(R.id.main_layout, scheduleFragment).addToBackStack(null).commit();
         }
     }
 
-    public void sendMessage(String message, int position, int finishPosition){
+    public void sendMessage(String message, int position, int finishPosition) {
         networkClient.setSendMessage(message, position, finishPosition);
     }
 
-    public Messaging getMessagingObject(){
+    public Messaging getMessagingObject() {
         return messaging;
     }
 
-    public void sendAccountRequest(List<LatLng> points, String from, String to){
+    public void sendAccountRequest(List<LatLng> points, String from, String to) {
         networkClient.setAccountRequest(points, from, to);
     }
 
-    public void sendEventRequest(List<LatLng> points, String from, String to){
+    public void sendEventRequest(List<LatLng> points, String from, String to) {
         networkClient.setEventRequest(points, from, to);
     }
 
-    private void variablesInitialization(Context context,
-            LocationManager locationManager, MapFragment map,
-            Handler mainActivityHandler) {
+    private void variablesInitialization(Context context, LocationManager locationManager, MapFragment map, Handler mainActivityHandler) {
         messaging = new Messaging();
         eventQueue = new EventQueue();
         messagingFragment = new MessagingFragment();
         scheduleFragment = new ScheduleFragment();
         this.mainActivityHandler = mainActivityHandler;
         this.locationManager = locationManager;
-        networkClient = new NetworkClient(context,this,
-                this, messaging);
+        networkClient = new NetworkClient(context, this, this, messaging);
         routeClient = new RouteClient(this);
-        mapManager = new MapManager(context,
-                this, mainActivityHandler, routeClient);
+        mapManager = new MapManager(context, this, mainActivityHandler, routeClient);
         mapManager.uploadMap(map);
         providersService = new ProvidersService();
-        gpsManager = new GPSManager(context, this,
-                locationManager);
+        gpsManager = new GPSManager(context, this, locationManager);
     }
 
-    public void refreshMap(MapFragment map){
+    public void refreshMap(MapFragment map) {
         mapManager.uploadMap(map);
     }
 
-    public void clearMessages(){
+    public void clearMessages() {
         messaging.clearMessages();
     }
 
 
     @SuppressWarnings("all")
-    private void sendMainActivityHandlerMessage(int what){
-        synchronized (blockingObject){
-            if (mainActivityHandler == null){
+    private void sendMainActivityHandlerMessage(int what) {
+        synchronized (blockingObject) {
+            if (mainActivityHandler == null) {
                 while (isNullHandler) {
                     continue;
                 }
@@ -305,9 +303,9 @@ public class MajorHandler implements LocationReceiver,
 
 
     @SuppressWarnings("all")
-    private void sendMainActivityHandlerMessage(int what, Object obj){
+    private void sendMainActivityHandlerMessage(int what, Object obj) {
         synchronized (blockingObject) {
-            if (mainActivityHandler == null){
+            if (mainActivityHandler == null) {
                 while (isNullHandler) {
                     continue;
                 }
@@ -320,9 +318,9 @@ public class MajorHandler implements LocationReceiver,
     }
 
     @SuppressWarnings("all")
-    private void sendMainActivityHandlerMessage(int what, int arg1, int arg2){
+    private void sendMainActivityHandlerMessage(int what, int arg1, int arg2) {
         synchronized (blockingObject) {
-            if (mainActivityHandler == null){
+            if (mainActivityHandler == null) {
                 while (isNullHandler) {
                     continue;
                 }
@@ -335,29 +333,29 @@ public class MajorHandler implements LocationReceiver,
         }
     }
 
-    public void nullHandler(){
-        synchronized (blockingObject){
+    public void nullHandler() {
+        synchronized (blockingObject) {
             mainActivityHandler = null;
             isNullHandler = true;
         }
     }
 
-    public void changeMarkerColorToDefault(int companionId){
+    public void changeMarkerColorToDefault(int companionId) {
         mapManager.changeMarkerColorToDefault(companionId);
     }
 
-    public void changeMarkerColorToSpecial(int companionId){
+    public void changeMarkerColorToSpecial(int companionId) {
         mapManager.changeMarkerColorToSpecial(companionId);
     }
 
 
-    public void recreateHandler(Handler mainActivityHandler){
+    public void recreateHandler(Handler mainActivityHandler) {
         mapManager.setHandler(mainActivityHandler);
         this.mainActivityHandler = mainActivityHandler;
         isNullHandler = false;
     }
 
-    public void refreshChatState(MessagingFragment messagingFragment){
+    public void refreshChatState(MessagingFragment messagingFragment) {
         this.messagingFragment = messagingFragment;
     }
 
@@ -376,17 +374,16 @@ public class MajorHandler implements LocationReceiver,
         sendMainActivityHandlerMessage(code);
     }
 
-    public void removeRoute(){
+    public void removeRoute() {
         mapManager.removeRoute();
     }
 
     @Override
     public void redirectRebuildingRoute(int code, int companionId) {
-        sendMainActivityHandlerMessage(code,
-                companionId, -1);
+        sendMainActivityHandlerMessage(code, companionId, -1);
     }
 
-    public void rebuildRoute(int companionId){
+    public void rebuildRoute(int companionId) {
         mapManager.rebuildRoute(companionId);
     }
 
@@ -420,9 +417,9 @@ public class MajorHandler implements LocationReceiver,
         sendWhatObjMessage(code, markers);
     }
 
-    public void sendAccountsToScheduleFragment(Object outputAccount){
+    public void sendAccountsToScheduleFragment(Object outputAccount) {
         eventQueue.setOutputObject((OutputAccount) outputAccount);
-        if (mainActivityHandler == null){
+        if (mainActivityHandler == null) {
             while (isNullHandler) {
                 continue;
             }
@@ -432,7 +429,7 @@ public class MajorHandler implements LocationReceiver,
         }
     }
 
-    private void sendWhatObjMessage(int what, Object obj){
+    private void sendWhatObjMessage(int what, Object obj) {
         sendMainActivityHandlerMessage(what, obj);
     }
 
@@ -441,7 +438,7 @@ public class MajorHandler implements LocationReceiver,
         sendWhatObjMessage(code, route);
     }
 
-    public EventQueue getEventQueue(){
+    public EventQueue getEventQueue() {
         return eventQueue;
     }
 
@@ -457,27 +454,27 @@ public class MajorHandler implements LocationReceiver,
 
     @Override
     public void redirectAccountTrying(int code) {
-        if(!isAccountTrying){
+        if (!isAccountTrying) {
             isAccountTrying = true;
             sendMainActivityHandlerMessage(code);
         }
     }
 
-    public void setNegativeAccountTrying(){
+    public void setNegativeAccountTrying() {
         isAccountTrying = false;
     }
 
-    public void doCompanionRequest(int code, int companionId){
+    public void doCompanionRequest(int code, int companionId) {
         trySendCompanionRequest(companionId);
     }
 
-    public void setScheduleFragmentState(boolean state, ScheduleFragment scheduleFragment){
+    public void setScheduleFragmentState(boolean state, ScheduleFragment scheduleFragment) {
         this.scheduleFragment = scheduleFragment;
         scheduleFragmentState = state;
     }
 
-    public void sendBadMessageState(int position, int finishPosition){
-        if (mainActivityHandler == null){
+    public void sendBadMessageState(int position, int finishPosition) {
+        if (mainActivityHandler == null) {
             while (isNullHandler) {
                 continue;
             }
@@ -487,11 +484,11 @@ public class MajorHandler implements LocationReceiver,
         }
     }
 
-    public void doAlertNegative(){
+    public void doAlertNegative() {
         networkClient.doAlertNegative();
     }
 
-    public void doAlertPositive(){
+    public void doAlertPositive() {
         networkClient.doAlertPositive();
     }
 

@@ -2,6 +2,6 @@ package net.nel.il.parentassistant.interfaces;
 
 public interface AdapterStateListener {
 
-    public void deleteNote(int position);
+    void deleteNote(int position);
 
 }

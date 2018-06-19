@@ -1,12 +1,8 @@
 package net.nel.il.parentassistant.model;
 
-import android.icu.util.GregorianCalendar;
-
-import java.text.SimpleDateFormat;
-import java.util.Calendar;
 import java.util.Date;
 
-public class Message{
+public class Message {
 
     private String message;
 
@@ -16,13 +12,13 @@ public class Message{
 
     private boolean state = false;
 
-    public Message(String message, boolean owner, long time){
+    public Message(String message, boolean owner, long time) {
         this.message = message;
         this.owner = owner;
         this.time = new Date(time);
     }
 
-    public Message(String message, boolean owner, long time, boolean state){
+    public Message(String message, boolean owner, long time, boolean state) {
         this.message = message;
         this.owner = owner;
         this.time = new Date(time);

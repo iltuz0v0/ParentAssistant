@@ -51,8 +51,7 @@ public class InputAccount {
     public InputAccount() {
     }
 
-    public InputAccount(int id, int identifier, float radius, double lat,
-                        double lng, int companion_id) {
+    public InputAccount(int id, int identifier, float radius, double lat, double lng, int companion_id) {
         this.id = id;
         this.identifier = identifier;
         this.radius = radius;
@@ -61,8 +60,7 @@ public class InputAccount {
         this.companion_id = companion_id;
     }
 
-    public InputAccount(int id, int identifier, float radius, double lat,
-                        double lng) {
+    public InputAccount(int id, int identifier, float radius, double lat, double lng) {
         this.id = id;
         this.identifier = identifier;
         this.radius = radius;

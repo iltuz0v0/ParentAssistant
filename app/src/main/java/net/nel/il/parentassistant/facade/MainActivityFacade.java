@@ -39,9 +39,7 @@ public class MainActivityFacade {
     public NotificationManager notificationManager;
 
 
-    public MainActivityFacade(LocationManager locationManager,
-                              MajorHandler majorHandler,
-                              NotificationManager notificationManager) {
+    public MainActivityFacade(LocationManager locationManager, MajorHandler majorHandler, NotificationManager notificationManager) {
         this.notificationManager = notificationManager;
         this.locationManager = locationManager;
         this.majorHandler = majorHandler;

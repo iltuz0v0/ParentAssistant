@@ -11,8 +11,7 @@ import net.nel.il.parentassistant.interfaces.AdapterStateListener;
 
 import java.util.List;
 
-public class AccountAdapter extends RecyclerView.Adapter<AccountViewHolder>
-        implements View.OnClickListener{
+public class AccountAdapter extends RecyclerView.Adapter<AccountViewHolder> implements View.OnClickListener {
 
     private AdapterStateListener adapterStateListener;
 
@@ -20,8 +19,7 @@ public class AccountAdapter extends RecyclerView.Adapter<AccountViewHolder>
 
     private Context context;
 
-    AccountAdapter(List<Note> notes,
-                          AdapterStateListener adapterStateListener, Context context){
+    AccountAdapter(List<Note> notes, AdapterStateListener adapterStateListener, Context context) {
         this.notes = notes;
         this.context = context;
         this.adapterStateListener = adapterStateListener;
@@ -29,8 +27,7 @@ public class AccountAdapter extends RecyclerView.Adapter<AccountViewHolder>
 
     @Override
     public AccountViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext())
-                .inflate(R.layout.data_element, parent, false);
+        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.data_element, parent, false);
         return new AccountViewHolder(view);
     }
 
@@ -44,25 +41,22 @@ public class AccountAdapter extends RecyclerView.Adapter<AccountViewHolder>
         return notes.size();
     }
 
-    private void bind(AccountViewHolder holder, Note note, int position){
+    private void bind(AccountViewHolder holder, Note note, int position) {
         holder.elementDeleting.setImageResource(note.deletingResource);
         holder.elementDeleting.setTag(position);
         holder.elementDeleting.setOnClickListener(this);
         holder.photo.setImageBitmap(note.photo);
-        holder.name.setText(context.getString(R.string.pre_format,
-                context.getString(R.string.pre_name), note.name));
-        holder.age.setText(context.getString(R.string.pre_format,
-                context.getString(R.string.pre_age), note.age));
-        holder.hobbies.setText(context.getString(R.string.pre_format,
-                context.getString(R.string.pre_hobby), note.hobbies));
+        holder.name.setText(context.getString(R.string.pre_format, context.getString(R.string.pre_name), note.name));
+        holder.age.setText(context.getString(R.string.pre_format, context.getString(R.string.pre_age), note.age));
+        holder.hobbies.setText(context.getString(R.string.pre_format, context.getString(R.string.pre_hobby), note.hobbies));
     }
 
-    public void remove(int position){
+    public void remove(int position) {
         notes.remove(position);
         notifyDataSetChanged();
     }
 
-    public void setData(List<Note> notes){
+    public void setData(List<Note> notes) {
         this.notes = notes;
         notifyDataSetChanged();
     }

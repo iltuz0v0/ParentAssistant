@@ -1,8 +1,6 @@
 package net.nel.il.parentassistant.account;
 
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.os.Bundle;
@@ -14,8 +12,6 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.ScrollView;
 
 import net.nel.il.parentassistant.FileManager;
@@ -25,11 +21,9 @@ import net.nel.il.parentassistant.interfaces.AdapterStateListener;
 import net.nel.il.parentassistant.settings.SharedPreferenceManager;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-public class AccountActivity extends AppCompatActivity
-        implements View.OnClickListener, AdapterStateListener {
+public class AccountActivity extends AppCompatActivity implements View.OnClickListener, AdapterStateListener {
 
     private final int photoChoosingRequestCode = 10;
 
@@ -65,14 +59,12 @@ public class AccountActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_account);
         variablesInitialization();
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             accountDataHandler = new AccountDataHandler(fileManager);
-        }
-        else{
+        } else {
             refreshInstance();
         }
-        accountAdapter = new AccountAdapter(accountDataHandler.getData(getApplicationContext(),
-                mapTags), this, getApplicationContext());
+        accountAdapter = new AccountAdapter(accountDataHandler.getData(getApplicationContext(), mapTags), this, getApplicationContext());
         recyclerView.setAdapter(accountAdapter);
     }
 
@@ -82,8 +74,7 @@ public class AccountActivity extends AppCompatActivity
         switch (requestCode) {
             case photoChoosingRequestCode:
                 if (resultCode == RESULT_OK) {
-                    Bitmap uploadedBitmap = accountDataHandler.setBitmap(
-                            getApplicationContext(), data);
+                    Bitmap uploadedBitmap = accountDataHandler.setBitmap(getApplicationContext(), data);
                     uploadImageView.setImageBitmap(uploadedBitmap);
                 }
                 break;
@@ -101,7 +92,6 @@ public class AccountActivity extends AppCompatActivity
         accountActivityFacade.accountDataHandler = accountDataHandler;
         return accountActivityFacade;
     }
-
 
 
     @Override
@@ -136,9 +126,9 @@ public class AccountActivity extends AppCompatActivity
         SharedPreferenceManager.accountInformationUpdated(getApplicationContext());
         accountDataHandler.saveNote(getApplicationContext(), accountList, mapTags);
         elementAdditionContainer.setVisibility(View.INVISIBLE);
-        accountAdapter.setData(accountDataHandler
-                .getData(getApplicationContext(), mapTags));
+        accountAdapter.setData(accountDataHandler.getData(getApplicationContext(), mapTags));
         setDefaultFieldValues();
+        closeNote();
     }
 
     private void closeNote() {
@@ -150,8 +140,7 @@ public class AccountActivity extends AppCompatActivity
         uploadImageView.setImageResource(R.drawable.face);
         elementAdditionButton.setVisibility(View.INVISIBLE);
         elementAdditionContainer.setVisibility(View.VISIBLE);
-        elementAdditionContainer.setBackgroundColor(
-                getResources().getColor(R.color.add_note_color));
+        elementAdditionContainer.setBackgroundColor(getResources().getColor(R.color.add_note_color));
     }
 
     private void uploadImage() {
@@ -180,12 +169,10 @@ public class AccountActivity extends AppCompatActivity
         noteSavingButton.setOnClickListener(this);
     }
 
-    private void refreshInstance(){
-        AccountActivityFacade accountActivityFacade = (AccountActivityFacade)
-                getLastCustomNonConfigurationInstance();
-        if(accountActivityFacade != null) {
-            elementAdditionContainer.setVisibility(accountActivityFacade
-                    .additionContainerState);
+    private void refreshInstance() {
+        AccountActivityFacade accountActivityFacade = (AccountActivityFacade) getLastCustomNonConfigurationInstance();
+        if (accountActivityFacade != null) {
+            elementAdditionContainer.setVisibility(accountActivityFacade.additionContainerState);
             elementAdditionContainer.setBackgroundColor(Color.WHITE);
             elementAdditionButton.setVisibility(accountActivityFacade.additionButtonState);
             nameEditText.setText(accountActivityFacade.name);
@@ -193,13 +180,13 @@ public class AccountActivity extends AppCompatActivity
             hobbiesEditText.setText(accountActivityFacade.hobbies);
             accountDataHandler = accountActivityFacade.accountDataHandler;
             accountDataHandler.clearData();
-            if(accountDataHandler.uploadedBitmap != null){
+            if (accountDataHandler.uploadedBitmap != null) {
                 uploadImageView.setImageBitmap(accountDataHandler.uploadedBitmap);
             }
         }
     }
 
-    public void setDefaultFieldValues(){
+    public void setDefaultFieldValues() {
         nameEditText.setText("");
         ageEditText.setText("");
         hobbiesEditText.setText("");

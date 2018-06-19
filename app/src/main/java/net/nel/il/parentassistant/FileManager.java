@@ -1,14 +1,10 @@
 package net.nel.il.parentassistant;
 
 import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.net.Uri;
-import android.provider.MediaStore;
 import android.util.Base64;
 
-import net.nel.il.parentassistant.model.InfoAccount;
 import net.nel.il.parentassistant.model.OutputAccount;
 
 import java.io.BufferedOutputStream;
@@ -55,8 +51,7 @@ public class FileManager {
     public ArrayList<HashMap<String, Object>> getUserData(Context context) {
         ArrayList<HashMap<String, Object>> userData = new ArrayList<>();
         if (existInternalFile(context, usedFile)) {
-            try (BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(context.openFileInput(usedFile)))) {
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(context.openFileInput(usedFile)))) {
                 String name;
                 String value;
                 HashMap<String, Object> dataElement = new HashMap<>();
@@ -80,8 +75,7 @@ public class FileManager {
     }
 
     public void saveUserData(Context context, String[] mapTags, String[] data) {
-        try (BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(context.openFileOutput(usedFile, Context.MODE_APPEND)))) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(context.openFileOutput(usedFile, Context.MODE_APPEND)))) {
             for (int element = 0; element < mapTags.length; element++) {
                 writer.write(mapTags[element] + "\n");
                 writer.write(data[element] + "\n");
@@ -93,12 +87,11 @@ public class FileManager {
 
     }
 
-    public void saveUserDataFromServer(OutputAccount outputAccount,
-                                       Context context){
+    public void saveUserDataFromServer(OutputAccount outputAccount, Context context) {
         String[] mapTags = context.getResources().getStringArray(R.array.mapTags);
         String[] dataCopy = new String[ACCOUNT_FIELDS_AMOUNT];
         int index = 0;
-        for(int element = 0; element < outputAccount.getNames().size(); element++){
+        for (int element = 0; element < outputAccount.getNames().size(); element++) {
             dataCopy[index++] = Integer.toString(element);
             uploadBitmap(context, Integer.toString(element), outputAccount.getPhotos().get(element));
             dataCopy[index++] = outputAccount.getNames().get(element);
@@ -110,8 +103,7 @@ public class FileManager {
     }
 
     private void uploadBitmap(Context context, String name, String photo) {
-        try (BufferedOutputStream writer = new BufferedOutputStream(
-                context.openFileOutput(name, Context.MODE_PRIVATE))) {
+        try (BufferedOutputStream writer = new BufferedOutputStream(context.openFileOutput(name, Context.MODE_PRIVATE))) {
             Bitmap bitmap = decodeImage(photo);
             bitmap.compress(Bitmap.CompressFormat.JPEG, QUALITY_COMPRESS, writer);
         } catch (IOException e) {
@@ -121,14 +113,12 @@ public class FileManager {
 
     private Bitmap decodeImage(String photo) {
         byte[] photoCopy = Base64.decode(photo, Base64.DEFAULT);
-        return BitmapFactory
-                .decodeByteArray(photoCopy, 0, photoCopy.length);
+        return BitmapFactory.decodeByteArray(photoCopy, 0, photoCopy.length);
     }
 
     public void deleteUserData(Context context, int position) {
         ArrayList<String> fileAsArray = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(
-                new InputStreamReader(context.openFileInput(usedFile)))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(context.openFileInput(usedFile)))) {
             String result;
             while ((result = reader.readLine()) != null) {
                 fileAsArray.add(result);
@@ -137,8 +127,7 @@ public class FileManager {
             e.printStackTrace();
         }
         int spacePosition = -1;
-        try (BufferedWriter writer = new BufferedWriter(
-                new OutputStreamWriter(context.openFileOutput(usedFile, Context.MODE_PRIVATE)))) {
+        try (BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(context.openFileOutput(usedFile, Context.MODE_PRIVATE)))) {
             for (int element = 0; element < fileAsArray.size(); element++) {
                 if (fileAsArray.get(element).equals(SPACE)) {
                     spacePosition++;

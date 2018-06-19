@@ -1,24 +1,23 @@
 package net.nel.il.parentassistant.main;
 
 import android.Manifest;
-import android.app.AlertDialog;
+import android.app.Activity;
 import android.app.Dialog;
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.ColorDrawable;
 import android.location.Location;
 import android.location.LocationManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
-import android.support.v4.app.FragmentManager;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
@@ -45,16 +44,16 @@ import com.google.android.gms.tasks.Task;
 import net.nel.il.parentassistant.AlertDialogService;
 import net.nel.il.parentassistant.Messaging.Messaging;
 import net.nel.il.parentassistant.Messaging.MessagingFragment;
+import net.nel.il.parentassistant.R;
 import net.nel.il.parentassistant.ToastManager;
+import net.nel.il.parentassistant.account.AccountActivity;
 import net.nel.il.parentassistant.facade.MainActivityFacade;
 import net.nel.il.parentassistant.location.GPSManager;
 import net.nel.il.parentassistant.model.InfoAccount;
-import net.nel.il.parentassistant.model.OutputAccount;
 import net.nel.il.parentassistant.network.NetworkClient;
-import net.nel.il.parentassistant.R;
-import net.nel.il.parentassistant.account.AccountActivity;
 import net.nel.il.parentassistant.network.NetworkClientMessaging;
 import net.nel.il.parentassistant.notification.CustomNotificationManager;
+import net.nel.il.parentassistant.schedule.Account;
 import net.nel.il.parentassistant.schedule.EventQueue;
 import net.nel.il.parentassistant.schedule.ScheduleFragment;
 import net.nel.il.parentassistant.settings.SettingsActivity;
@@ -63,9 +62,10 @@ import net.nel.il.parentassistant.settings.SharedPreferenceManager;
 import java.util.List;
 import java.util.Set;
 
-public class MainActivity extends AppCompatActivity implements View.OnClickListener,
-        Handler.Callback, MessagingFragment.MessagingDialogCallback,
-        ScheduleFragment.ScheduleFragmentCallback{
+public class MainActivity extends AppCompatActivity
+        implements View.OnClickListener, Handler.Callback,
+        MessagingFragment.MessagingDialogCallback,
+        ScheduleFragment.ScheduleFragmentCallback {
 
     public static final int locationPermissionsRequestCode = 10;
 
@@ -79,9 +79,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public final int accountChangeRequestCode = 14;
 
-    public static boolean isPermissionLocation = false;
+    public boolean isPermissionLocation = false;
 
-    public static boolean isPermissionInternet = false;
+    public boolean isPermissionInternet = false;
 
     public static final int ONE_MESSAGE_ICON = 14;
 
@@ -157,17 +157,18 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private CustomNotificationManager customNotificationManager;
 
+    private static final float Z = 10.0f;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         variablesInitialization(savedInstanceState);
         signIn(false);
-        if(savedInstanceState == null){
+        if (savedInstanceState == null) {
             checkPermissions();
-            //majorHandler.beginTracingGPS(this);
-        }
-        else{
+            majorHandler.beginTrackingGPS(this, isPermissionLocation);
+        } else {
             refreshInstance();
         }
     }
@@ -186,17 +187,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (requestCode) {
             case gpsEnableRequestCode:
                 if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-                    //majorHandler.beginTracingGPS(this);
+                    majorHandler.beginTrackingGPS(this, isPermissionLocation);
                 }
                 break;
             case radiusChangeRequestCode:
                 majorHandler.changeRadius(getApplicationContext());
                 break;
             case googleAccountRequestCode:
-                if(resultCode == RESULT_OK) {
+                if (resultCode == RESULT_OK) {
                     checkGoogleAccount(data);
-                }
-                else{
+                } else {
                     signIn(false);
                 }
                 break;
@@ -210,7 +210,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         scheduleMenuItem = menu.findItem(R.id.schedule);
         settingsMenuItem = menu.findItem(R.id.settings);
         signedInMenuItem = menu.findItem(R.id.signed_in);
-        if(!isSignIn) {
+        if (!isSignIn) {
             optionsMenuState(false);
         }
         return true;
@@ -232,10 +232,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 signIn(false);
                 break;
             case R.id.schedule:
-                majorHandler.openScheduleFragment(this);
+                openSchedule();
                 break;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    private void openSchedule(){
+        majorHandler.openScheduleFragment(this);
+        mainLayout.setForeground(new ColorDrawable(getResources().getColor(R.color.transparent)));
     }
 
 
@@ -243,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.search:
-                //majorHandler.beginSearching(this);
+                majorHandler.beginSearching(this, isPermissionLocation);
                 break;
             case R.id.cancel:
                 cancelRequest();
@@ -262,8 +267,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 majorHandler.openMessagingDialog(this);
                 break;
             case R.id.sign_in_button:
-                Intent signInIntent = client.getSignInIntent();
-                startActivityForResult(signInIntent, googleAccountRequestCode);
+                signIn();
                 break;
             case R.id.buggy_button:
                 sendCompanionRequest(BUGGY);
@@ -272,8 +276,19 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 sendCompanionRequest(WALK);
                 break;
             case R.id.location:
+                majorHandler.beginTrackingGPS(this, isPermissionLocation);
                 majorHandler.findCurrentLocation();
                 break;
+        }
+    }
+
+    private void signIn(){
+        if(hasInternetConnection()) {
+            Intent signInIntent = client.getSignInIntent();
+            startActivityForResult(signInIntent, googleAccountRequestCode);
+        }
+        else{
+            ToastManager.showToast(getString(R.string.no_internet), this);
         }
     }
 
@@ -283,18 +298,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         majorHandler.recreateHandler(mainActivityHandler);
     }
 
-    private void checkPermissions() {
-//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-//                || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionsRequestCode);
-//        } else {
-//            isPermissionLocation = true;
-//        }
-//        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
-//            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, internetPermissionRequestCode);
-//        } else {
-//            isPermissionInternet = true;
-//        }
+    public void checkPermissions() {
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED || ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION}, locationPermissionsRequestCode);
+        } else {
+            isPermissionLocation = true;
+        }
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.INTERNET}, internetPermissionRequestCode);
+        } else {
+            isPermissionInternet = true;
+        }
     }
 
     @Override
@@ -302,10 +316,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         switch (requestCode) {
             case locationPermissionsRequestCode:
-                if (permissions.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED
-                        && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
+                if (permissions.length > 1 && grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED) {
                     isPermissionLocation = true;
-                   // majorHandler.beginTracingGPS(this);
+                    majorHandler.beginTrackingGPS(this, isPermissionLocation);
                 }
                 break;
 
@@ -319,8 +332,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public Object onRetainCustomNonConfigurationInstance() {
-        MainActivityFacade facade = new MainActivityFacade(locationManager,
-                majorHandler, manager);
+        MainActivityFacade facade = new MainActivityFacade(locationManager, majorHandler, manager);
         facade.cancel = cancel.getVisibility();
         facade.messaging = message.getVisibility();
         facade.search = search.getVisibility();
@@ -333,12 +345,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         facade.walkTypeLayout = walkTypeLayout.getVisibility();
         facade.walkType = currentWalkState;
         facade.cId = cId;
-        if(dialog != null){
+        if (dialog != null) {
             dialog.dismiss();
         }
         majorHandler.nullHandler();
         majorHandler.setNegativeAccountTrying();
-        mainActivityHandler = null;
         return facade;
     }
 
@@ -350,8 +361,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @SuppressWarnings("all")
-    public void handleMessageRedirection(Message message){
-        switch (message.what){
+    public void handleMessageRedirection(Message message) {
+        switch (message.what) {
             case NetworkClientMessaging.MARKER_ADDITION:
                 majorHandler.addMarker((InfoAccount) message.obj);
                 break;
@@ -388,13 +399,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 majorHandler.sendBadMessageState(message.arg1, message.arg2);
                 break;
             case NetworkClient.TRYING_TO_RETURN_OLD_ACCOUNT:
-                dialog = alertDialogService.createOldAcountReturningDialog(this,
-                        getString(R.string.returning_old_account));
+                dialog = alertDialogService.createOldAcountReturningDialog(this, getString(R.string.returning_old_account));
                 break;
         }
     }
 
-    public void handleMessageChangedInstance(Message message){
+    public void handleMessageChangedInstance(Message message) {
         switch (message.what) {
             case MajorHandler.IS_REQUEST_TO:
                 chooseWalkType(message.arg1);
@@ -433,51 +443,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 showCompanionRequest(message);
                 break;
             case NetworkClient.NO_INTERNET:
-                dialog = alertDialogService.createCommunicationStateDialog(this,
-                        getString(R.string.no_internet));
+                dialog = alertDialogService.createCommunicationStateDialog(this, getString(R.string.no_internet));
                 break;
             case NetworkClient.ACCOUNT_UPLOADED:
-                doAccountUploadedState((boolean)message.obj);
+                doAccountUploadedState((boolean) message.obj);
                 break;
         }
     }
 
-    private void doAccountUploadedState(boolean isUploaded){
-        if(isUploaded){
+    private void doAccountUploadedState(boolean isUploaded) {
+        if (isUploaded) {
             ToastManager.showToast(getString(R.string.alert_ok), this);
-        }
-        else{
+        } else {
             ToastManager.showToast(getString(R.string.failed), this);
         }
         changeConstantButtonStates(true);
         optionsMenuState(true);
-        mainLayout.setForeground(new ColorDrawable(
-                getResources().getColor(R.color.transparent)));
+        mainLayout.setForeground(new ColorDrawable(getResources().getColor(R.color.transparent)));
     }
 
-    private void closeRequest(){
+    private void closeRequest() {
         majorHandler.setClose();
     }
 
-    private void sendCompanionRequest(int type){
+    private void sendCompanionRequest(int type) {
         walkTypeLayout.setVisibility(View.INVISIBLE);
         majorHandler.sendCompanionRequest(cId, type);
         showCancel();
     }
 
-    public void chooseWalkType(int companionId){
+    public void chooseWalkType(int companionId) {
         walkTypeLayout.setVisibility(View.VISIBLE);
         cId = companionId;
     }
 
-    private void showBusyRequest(){
+    private void showBusyRequest() {
         cancel.setVisibility(View.INVISIBLE);
-        dialog = alertDialogService.createCommunicationStateDialog(this,
-                getString(R.string.busy_request));
+        dialog = alertDialogService.createCommunicationStateDialog(this, getString(R.string.busy_request));
         unableWaiting();
     }
 
-    private void cancelRequest(){
+    private void cancelRequest() {
         majorHandler.changeMarkerColorToDefault(NetworkClient.companionId);
         majorHandler.clearMessages();
         message.setVisibility(View.INVISIBLE);
@@ -486,7 +492,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         wait.setVisibility(View.INVISIBLE);
     }
 
-    private void acceptRequest(){
+    private void acceptRequest() {
         majorHandler.changeMarkerColorToDefault(NetworkClient.companionId);
         manager.cancelAll();
         majorHandler.clearMessages();
@@ -494,29 +500,28 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         requestWindow.setVisibility(View.INVISIBLE);
         cancel.setVisibility(View.VISIBLE);
         majorHandler.setAccept();
+        message.setImageResource(R.drawable.message);
     }
 
-    private void rejectRequest(){
+    private void rejectRequest() {
         majorHandler.changeMarkerColorToDefault(NetworkClient.companionId);
         manager.cancelAll();
         majorHandler.setReject();
         requestWindow.setVisibility(View.INVISIBLE);
     }
 
-    private void showOfflineCompanion(){
+    private void showOfflineCompanion() {
         cancel.setVisibility(View.INVISIBLE);
-        dialog = alertDialogService.createCommunicationStateDialog(this,
-                getString(R.string.companion_is_offline));
+        dialog = alertDialogService.createCommunicationStateDialog(this, getString(R.string.companion_is_offline));
     }
 
-    private void drawMessagingState(int drawableResource){
+    private void drawMessagingState(int drawableResource) {
         this.message.setImageResource(drawableResource);
         messageIconState = drawableResource;
     }
 
     private void showCancel() {
-        mainLayout.setForeground(new ColorDrawable(
-                getResources().getColor(R.color.main_activity_foreground)));
+        mainLayout.setForeground(new ColorDrawable(getResources().getColor(R.color.main_activity_foreground)));
         wait.setVisibility(View.VISIBLE);
         close.setVisibility(View.VISIBLE);
     }
@@ -530,15 +535,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private void showRequestRejection() {
         cancel.setVisibility(View.INVISIBLE);
-        dialog = alertDialogService.createCommunicationStateDialog(this,
-                getString(R.string.subscriber_rejected));
+        dialog = alertDialogService.createCommunicationStateDialog(this, getString(R.string.subscriber_rejected));
         unableWaiting();
     }
 
     private void showNoConnection() {
         cancel.setVisibility(View.INVISIBLE);
-        dialog = alertDialogService.createCommunicationStateDialog(this,
-                getString(R.string.subscriber_not_connection));
+        dialog = alertDialogService.createCommunicationStateDialog(this, getString(R.string.subscriber_not_connection));
         unableWaiting();
     }
 
@@ -546,14 +549,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         message.setVisibility(View.INVISIBLE);
         cancel.setVisibility(View.INVISIBLE);
         wait.setVisibility(View.INVISIBLE);
-        dialog = alertDialogService.createCommunicationStateDialog(this,
-                getString(R.string.subscriber_broke_connection));
+        dialog = alertDialogService.createCommunicationStateDialog(this, getString(R.string.subscriber_broke_connection));
     }
 
-    private void showTimeExceedMessage(){
+    private void showTimeExceedMessage() {
         cancel.setVisibility(View.INVISIBLE);
-        dialog = alertDialogService.createCommunicationStateDialog(this,
-                getString(R.string.subscriber_doesnt_answer));
+        dialog = alertDialogService.createCommunicationStateDialog(this, getString(R.string.subscriber_doesnt_answer));
         unableWaiting();
     }
 
@@ -561,50 +562,46 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         customNotificationManager.createRequestNotification(manager, id, type, this);
         majorHandler.blockEverything();
         int result = majorHandler.illuminateMarker(id);
-        if(result == MapManager.IS_DESTINATION_MARKER){
+        if (result == MapManager.IS_DESTINATION_MARKER) {
             requestWindow.setVisibility(View.VISIBLE);
-            if(type == BUGGY){
+            if (type == BUGGY) {
                 walkFrom.setImageResource(R.drawable.buggy);
                 currentWalkState = R.drawable.buggy;
-            }
-            else if(type == WALK){
+            } else if (type == WALK) {
                 walkFrom.setImageResource(R.drawable.walk);
                 currentWalkState = R.drawable.walk;
             }
-        }
-        else{
+        } else {
             majorHandler.setNotAvailable();
         }
     }
 
-    private void showRequestFromNotification(int id, int type){
+    private void showRequestFromNotification(int id, int type) {
         majorHandler.blockEverything();
         int result = majorHandler.illuminateMarker(id);
-        if(result == MapManager.IS_DESTINATION_MARKER){
+        if (result == MapManager.IS_DESTINATION_MARKER) {
             majorHandler.buildPossibleRoute(id);
             requestWindow.setVisibility(View.VISIBLE);
-            if(type == BUGGY){
+            if (type == BUGGY) {
                 walkFrom.setImageResource(R.drawable.buggy);
                 currentWalkState = R.drawable.buggy;
-            }
-            else if(type == WALK){
+            } else if (type == WALK) {
                 walkFrom.setImageResource(R.drawable.walk);
                 currentWalkState = R.drawable.walk;
             }
-        }
-        else {
+        } else {
             majorHandler.setNotAvailable();
         }
     }
 
-    private void setClose(){
+    private void setClose() {
         cancel.setVisibility(View.INVISIBLE);
         unableWaiting();
     }
 
     private void variablesInitialization(Bundle savedInstanceState) {
         map = (MapFragment) getFragmentManager().findFragmentById(R.id.mapFragment);
-        //mainActivityHandler = new Handler(this);
+        mainActivityHandler = new Handler(this);
         if (savedInstanceState == null) {
             firstInitialization();
         }
@@ -612,42 +609,42 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         walkFrom = (ImageView) findViewById(R.id.walk_from_image_view);
         walkTypeLayout = (LinearLayout) findViewById(R.id.walkTypeLayout);
         buggyButton = (ImageButton) findViewById(R.id.buggy_button);
-        //buggyButton.setOnClickListener(this);
+        buggyButton.setOnClickListener(this);
         walkButton = (ImageButton) findViewById(R.id.walk_button);
-        //walkButton.setOnClickListener(this);
+        walkButton.setOnClickListener(this);
         signInLinearLayout = (LinearLayout) findViewById(R.id.sign_in_layout);
         signInButton = findViewById(R.id.sign_in_button);
-        //signInButton.setOnClickListener(this);
+        signInButton.setOnClickListener(this);
         message = (FloatingActionButton) findViewById(R.id.messaging);
-        //
-        message.setVisibility(View.VISIBLE);
-        //
-        //message.setOnClickListener(this);
+        message.setOnClickListener(this);
         alertDialogService = new AlertDialogService();
         mainLayout = (FrameLayout) findViewById(R.id.main_layout);
         close = (ImageView) findViewById(R.id.close);
-        //close.setOnClickListener(this);
+        close.setOnClickListener(this);
         requestWindow = (LinearLayout) findViewById(R.id.is_request_window);
-        //requestWindow.setOnClickListener(this);
+        requestWindow.setOnClickListener(this);
         accept = (Button) findViewById(R.id.accept);
-        //accept.setOnClickListener(this);
+        accept.setOnClickListener(this);
         reject = (Button) findViewById(R.id.reject);
-        //reject.setOnClickListener(this);
+        reject.setOnClickListener(this);
         cancel = (Button) findViewById(R.id.cancel);
-        //cancel.setOnClickListener(this);
+        cancel.setOnClickListener(this);
         location = (FloatingActionButton) findViewById(R.id.location);
-        //location.setOnClickListener(this);
+        location.setOnClickListener(this);
         search = (FloatingActionButton) findViewById(R.id.search);
-        //search.setOnClickListener(this);
+        search.setOnClickListener(this);
         wait = (ProgressBar) findViewById(R.id.request_in_progress);
+        cancel.setZ(Z);
+        search.setZ(Z);
+        location.setZ(Z);
+        message.setZ(Z);
+        mainLayout.setZ(Z);
     }
 
-    private void firstInitialization(){
-        manager = (NotificationManager)
-                getSystemService(NOTIFICATION_SERVICE);
-        locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
-        majorHandler = new MajorHandler(getApplicationContext(), locationManager,
-                map, mainActivityHandler);
+    private void firstInitialization() {
+        manager = (NotificationManager) getApplicationContext().getSystemService(NOTIFICATION_SERVICE);
+        locationManager = (LocationManager) getApplicationContext().getSystemService(LOCATION_SERVICE);
+        majorHandler = new MajorHandler(getApplicationContext(), locationManager, map, mainActivityHandler);
     }
 
     @Override
@@ -666,22 +663,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    public void setMessagingDialogState(boolean state) {
+        majorHandler.setMessagingDialogState(state);
+    }
+
+    @Override
     public void block() {
-        doBlockState(View.INVISIBLE);
         optionsMenuVisible(false);
     }
 
     @Override
     public void unblock() {
-        doBlockState(View.VISIBLE);
         optionsMenuVisible(true);
-    }
-
-    private void doBlockState(int visibility){
-        cancel.setVisibility(visibility);
-        search.setVisibility(visibility);
-        location.setVisibility(visibility);
-        message.setVisibility(visibility);
+        if(wait.getVisibility() == View.VISIBLE){
+            mainLayout.setForeground(new ColorDrawable(getResources().getColor(R.color.main_activity_foreground)));
+        }
     }
 
     @Override
@@ -705,8 +701,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
-    public void sendAccountRequest(List<LatLng> points, String from,
-                                   String to) {
+    public void sendAccountRequest(List<LatLng> points, String from, String to) {
         majorHandler.sendAccountRequest(points, from, to);
     }
 
@@ -722,15 +717,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void setScheduleFragmentState(boolean state, ScheduleFragment scheduleFragment) {
-        if(message.getVisibility() == View.INVISIBLE){
-            cancel.setVisibility(View.INVISIBLE);
-        }
         majorHandler.setScheduleFragmentState(state, scheduleFragment);
     }
 
-    public void refreshInstance(){
-        MainActivityFacade facade = (MainActivityFacade)
-                getLastCustomNonConfigurationInstance();
+    public void refreshInstance() {
+        MainActivityFacade facade = (MainActivityFacade) getLastCustomNonConfigurationInstance();
         manager = facade.notificationManager;
         locationManager = facade.locationManager;
         majorHandler = facade.majorHandler;
@@ -748,27 +739,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         currentWalkState = facade.walkType;
         cId = facade.cId;
         majorHandler.refreshMap(map);
-        if(requestWindow.getVisibility() == View.VISIBLE){
+        if (requestWindow.getVisibility() == View.VISIBLE) {
             majorHandler.changeMarkerColorToSpecial(NetworkClient.companionId);
         }
     }
 
-    private void showCompanionRequest(Message message){
+    private void showCompanionRequest(Message message) {
         InfoWindow infoWindow = new InfoWindow();
-        infoWindow.createCompanionRequestWindow(this, message.obj,
-                message.arg1, message.arg2, majorHandler);
+        infoWindow.createCompanionRequestWindow(this, message.obj, message.arg1, message.arg2, majorHandler);
     }
 
-    private void signIn(boolean isRepeat){
-        GoogleSignInOptions gso = new GoogleSignInOptions
-                .Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-                .requestId()
-                .requestEmail()
-                .build();
+    private void signIn(boolean isRepeat) {
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN).requestId().requestEmail().build();
         client = GoogleSignIn.getClient(this, gso);
         GoogleSignInAccount account = GoogleSignIn.getLastSignedInAccount(this);
-        if(account == null){
-            if(isRepeat){
+        if (account == null) {
+            if (isRepeat) {
                 changeConstantButtonStates(false);
                 optionsMenuState(false);
             }
@@ -779,16 +765,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void checkGoogleAccount(Intent data){
+    private void checkGoogleAccount(Intent data) {
         signInLinearLayout.setVisibility(View.INVISIBLE);
         Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
         try {
             changeConstantButtonStates(true);
             optionsMenuState(true);
             GoogleSignInAccount account = task.getResult(ApiException.class);
-            boolean result = SharedPreferenceManager
-                    .saveGoogleIdentifier(getApplicationContext(), account);
-            if(result){
+            boolean result = SharedPreferenceManager.saveGoogleIdentifier(getApplicationContext(), account);
+            if (result) {
                 SharedPreferenceManager.accountInformationUpdated(getApplicationContext());
             }
         } catch (ApiException e) {
@@ -796,46 +781,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void changeConstantButtonStates(boolean state){
+    private void changeConstantButtonStates(boolean state) {
         location.setClickable(state);
         search.setClickable(state);
     }
 
-    private void optionsMenuState(boolean state){
-        if(accountMenuItem != null) {
+    private void optionsMenuState(boolean state) {
             accountMenuItem.setEnabled(state);
             scheduleMenuItem.setEnabled(state);
             settingsMenuItem.setEnabled(state);
             signedInMenuItem.setVisible(state);
-        }
     }
 
-    private void optionsMenuVisible(boolean state){
-        if(accountMenuItem != null) {
+    private void optionsMenuVisible(boolean state) {
             accountMenuItem.setVisible(state);
             scheduleMenuItem.setVisible(state);
             settingsMenuItem.setVisible(state);
             signedInMenuItem.setVisible(state);
-        }
     }
 
     private void unableWaiting() {
         wait.setVisibility(View.INVISIBLE);
         close.setVisibility(View.INVISIBLE);
-        mainLayout.setForeground(new ColorDrawable(
-                getResources().getColor(R.color.transparent)));
+        mainLayout.setForeground(new ColorDrawable(getResources().getColor(R.color.transparent)));
     }
 
-    public void doAlertPositive(){
+    public void doAlertPositive() {
         changeConstantButtonStates(false);
         optionsMenuState(false);
-        mainLayout.setForeground(new ColorDrawable(
-                getResources().getColor(R.color.main_activity_foreground)));
+        mainLayout.setForeground(new ColorDrawable(getResources().getColor(R.color.main_activity_foreground)));
         majorHandler.doAlertPositive();
     }
 
-    public void doAlertNegative(){
+    public void doAlertNegative() {
         majorHandler.doAlertNegative();
+    }
+
+    private boolean hasInternetConnection() {
+        boolean connection = false;
+        ConnectivityManager connectivity = (ConnectivityManager) getApplicationContext().getSystemService(MainActivity.CONNECTIVITY_SERVICE);
+        NetworkInfo networkInfo = connectivity.getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+        if (networkInfo != null && networkInfo.isConnected()) {
+            connection = true;
+        }
+        networkInfo = connectivity.getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+        if (networkInfo != null && networkInfo.isConnected()) {
+            connection = true;
+        }
+        return connection;
     }
 
 }

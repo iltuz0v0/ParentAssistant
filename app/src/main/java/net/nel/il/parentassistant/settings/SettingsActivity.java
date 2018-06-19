@@ -10,8 +10,7 @@ import android.widget.TextView;
 import net.nel.il.parentassistant.R;
 import net.nel.il.parentassistant.main.MapManager;
 
-public class SettingsActivity extends AppCompatActivity
-        implements SeekBar.OnSeekBarChangeListener, View.OnClickListener {
+public class SettingsActivity extends AppCompatActivity implements SeekBar.OnSeekBarChangeListener, View.OnClickListener {
 
     private SeekBar radiusSeekBar;
 
@@ -47,8 +46,7 @@ public class SettingsActivity extends AppCompatActivity
 
     @SuppressWarnings("all")
     private void seekBarInitialization() {
-        float radius = sharedPreferenceManager.getValue(this,
-                R.string.settings_file, R.string.setting_radius);
+        float radius = sharedPreferenceManager.getValue(this, R.string.settings_file, R.string.setting_radius);
         if (radius == -1.0f) {
             radius = MapManager.defaultCircleRadius;
         }
@@ -58,8 +56,7 @@ public class SettingsActivity extends AppCompatActivity
 
     @Override
     public void onClick(View view) {
-        sharedPreferenceManager.setValue(this, R.string.settings_file,
-                (float) radiusSeekBar.getProgress(), R.string.setting_radius);
+        sharedPreferenceManager.setValue(this, R.string.settings_file, (float) radiusSeekBar.getProgress(), R.string.setting_radius);
     }
 
     private void variablesInitialization() {

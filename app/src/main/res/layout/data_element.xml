@@ -1,25 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
     <LinearLayout
-        android:layout_weight="5"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
         <ImageButton
-            android:layout_weight="1"
             android:id="@+id/element_deleting"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:contentDescription="@string/description_element_deleting"
             android:layout_gravity="top|end"
+            android:layout_marginTop="5dp"
             android:backgroundTint="@color/button"
-            android:src="@drawable/delete_element"
-            android:layout_marginTop="5dp" />
+            android:contentDescription="@string/description_element_deleting"
+            android:src="@drawable/delete_element" />
+
         <ImageView
-            android:layout_weight="4"
             android:id="@+id/photo"
             android:layout_width="250dp"
             android:layout_height="400dp"
@@ -27,38 +27,41 @@
             android:contentDescription="@string/description_photo"
             android:src="@drawable/face" />
     </LinearLayout>
+
     <LinearLayout
-        android:layout_weight="10"
-        android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
         <TextView
             android:id="@+id/name"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/name_text_view"
-            android:textSize="20sp"
-            android:layout_marginRight="20dp"
             android:layout_marginLeft="20dp"
-            android:layout_marginTop="5dp" />
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="5dp"
+            android:text="@string/name_text_view"
+            android:textSize="16sp" />
+
         <TextView
             android:id="@+id/age"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/age_text_view"
-            android:textSize="20sp"
-            android:layout_marginRight="20dp"
             android:layout_marginLeft="20dp"
-            android:layout_marginTop="3dp" />
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="3dp"
+            android:text="@string/age_text_view"
+            android:textSize="16sp" />
+
         <TextView
             android:id="@+id/hobbies"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/hobbies_text_view"
-            android:textSize="20sp"
             android:layout_marginBottom="50dp"
-            android:layout_marginRight="20dp"
             android:layout_marginLeft="20dp"
-            android:layout_marginTop="3dp" />
+            android:layout_marginRight="20dp"
+            android:layout_marginTop="3dp"
+            android:text="@string/hobbies_text_view"
+            android:textSize="16sp" />
     </LinearLayout>
 </LinearLayout>

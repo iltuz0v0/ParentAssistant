@@ -6,8 +6,6 @@ import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 
-import com.google.android.gms.maps.model.LatLng;
-
 import net.nel.il.parentassistant.R;
 import net.nel.il.parentassistant.interfaces.LocationReceiver;
 
@@ -31,19 +29,15 @@ public class LocationHandler implements LocationListener {
         if (location.getProvider().equals(LocationManager.GPS_PROVIDER)) {
             isEnabledGPS = true;
         }
-        if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)
-                && amountGPSReplies < switchingSteps) {
+        if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER) && amountGPSReplies < switchingSteps) {
             locationReceiver.sendLocation(location);
             amountGPSReplies++;
-        } else if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER)
-                && amountGPSReplies >= switchingSteps && !isEnabledGPS) {
+        } else if (location.getProvider().equals(LocationManager.NETWORK_PROVIDER) && amountGPSReplies >= switchingSteps && !isEnabledGPS) {
             locationReceiver.sendLocation(location);
-        } else if (location.getProvider().equals(LocationManager.GPS_PROVIDER)
-                && amountGPSReplies == 0) {
+        } else if (location.getProvider().equals(LocationManager.GPS_PROVIDER) && amountGPSReplies == 0) {
             amountGPSReplies = switchingSteps;
         }
-        if (location.getProvider().equals(LocationManager.GPS_PROVIDER)
-                && amountGPSReplies >= switchingSteps) {
+        if (location.getProvider().equals(LocationManager.GPS_PROVIDER) && amountGPSReplies >= switchingSteps) {
             locationReceiver.sendLocation(location);
         }
     }

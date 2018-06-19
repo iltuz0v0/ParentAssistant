@@ -45,7 +45,7 @@ public class OutputAccount {
     public OutputAccount() {
     }
 
-    public OutputAccount(OutputAccount outputAccount){
+    public OutputAccount(OutputAccount outputAccount) {
         this.id = outputAccount.getId();
         this.identifier = outputAccount.getIdentifier();
         this.companionId = outputAccount.getCompanionId();
@@ -175,10 +175,7 @@ public class OutputAccount {
         this.peopleLongitudes = peopleLongitudes;
     }
 
-    public void setLists(List<String> names, List<String> ages, List<String> hobbies,
-                         List<String> photos, List<Double> peopleLatitudes,
-                         List<Double> peopleLongitudes, List<Integer> peopleIdentifiers,
-                         List<Integer> peopleStatuses){
+    public void setLists(List<String> names, List<String> ages, List<String> hobbies, List<String> photos, List<Double> peopleLatitudes, List<Double> peopleLongitudes, List<Integer> peopleIdentifiers, List<Integer> peopleStatuses) {
         this.names = names;
         this.ages = ages;
         this.hobbies = hobbies;

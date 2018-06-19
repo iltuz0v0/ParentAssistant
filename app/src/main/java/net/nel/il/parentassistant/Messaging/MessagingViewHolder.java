@@ -6,7 +6,7 @@ import android.widget.TextView;
 
 import net.nel.il.parentassistant.R;
 
-public class MessagingViewHolder extends RecyclerView.ViewHolder{
+public class MessagingViewHolder extends RecyclerView.ViewHolder {
 
     TextView message;
 

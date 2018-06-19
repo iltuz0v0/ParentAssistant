@@ -3,14 +3,10 @@ package net.nel.il.parentassistant.main;
 
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Handler;
-import android.support.v7.widget.RecyclerView;
-import android.view.LayoutInflater;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -28,9 +24,7 @@ import com.google.android.gms.maps.model.PolylineOptions;
 
 import net.nel.il.parentassistant.R;
 import net.nel.il.parentassistant.interfaces.ConnectionStateListener;
-import net.nel.il.parentassistant.interfaces.MarkerStateListener;
 import net.nel.il.parentassistant.model.InfoAccount;
-import net.nel.il.parentassistant.model.Message;
 import net.nel.il.parentassistant.network.NetworkClient;
 import net.nel.il.parentassistant.settings.SharedPreferenceManager;
 
@@ -41,10 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.TreeSet;
 
-public class MapManager implements OnMapReadyCallback,
-        GoogleMap.OnMarkerClickListener{
+public class MapManager implements OnMapReadyCallback, GoogleMap.OnMarkerClickListener {
 
     private GoogleMap googleMap = null;
 
@@ -110,9 +102,7 @@ public class MapManager implements OnMapReadyCallback,
 
     private int specialMarkerId = -1;
 
-    public MapManager(Context context, ConnectionStateListener connectionStateListener,
-                      Handler mainActivityHandler,
-                      RouteClient routeClient) {
+    public MapManager(Context context, ConnectionStateListener connectionStateListener, Handler mainActivityHandler, RouteClient routeClient) {
         this.context = context;
         this.mainActivityHandler = mainActivityHandler;
         variablesInitialization(context, connectionStateListener, routeClient);
@@ -125,10 +115,9 @@ public class MapManager implements OnMapReadyCallback,
     @Override
     public void onMapReady(GoogleMap googleMap) {
         this.googleMap = googleMap;
-        if(isCreated){
+        if (isCreated) {
             refreshMap();
-        }
-        else{
+        } else {
             createStartPosition();
         }
         googleMap.setOnMarkerClickListener(this);
@@ -136,19 +125,17 @@ public class MapManager implements OnMapReadyCallback,
 
     }
 
-    public void setHandler(Handler mainHandler){
+    public void setHandler(Handler mainHandler) {
         mainActivityHandler = mainHandler;
     }
 
     public void setAdjustedLocation(Location lastLocation, Context context) {
-        float radius = sharedPreferenceManager.getValue(context, R.string.settings_file,
-                R.string.setting_radius);
+        float radius = sharedPreferenceManager.getValue(context, R.string.settings_file, R.string.setting_radius);
         if (radius != -1.0f) {
             defaultCircleRadius = radius;
         }
-        if(!isCourseCameraMove && lastLocation != null){
-            createStartPosition(new LatLng(lastLocation.getLatitude(),
-                    lastLocation.getLongitude()));
+        if (!isCourseCameraMove && lastLocation != null) {
+            createStartPosition(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()));
         }
         this.lastLocation = lastLocation;
     }
@@ -161,28 +148,25 @@ public class MapManager implements OnMapReadyCallback,
         moveCameraToPosition(currentLocation, locationZoom);
     }
 
-    public void findCurrentLocation(){
+    public void findCurrentLocation() {
         moveCameraToLastPosition(locationZoom);
     }
 
-    private void moveCameraToLastPosition(int zoom){
+    private void moveCameraToLastPosition(int zoom) {
         if (googleMap != null && lastLocation != null) {
             isCourseCameraMove = true;
-            googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(
-                    lastLocation.getLatitude(), lastLocation.getLongitude())));
+            googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude())));
             googleMap.moveCamera(CameraUpdateFactory.zoomTo(zoom));
         }
     }
 
-    private void moveCameraToPosition(LatLng currentLocation, int zoom){
-        if(googleMap != null && currentLocation != null) {
+    private void moveCameraToPosition(LatLng currentLocation, int zoom) {
+        if (googleMap != null && currentLocation != null) {
             isCourseCameraMove = true;
-            googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(
-                    currentLocation.latitude, currentLocation.longitude)));
+            googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(currentLocation.latitude, currentLocation.longitude)));
             googleMap.moveCamera(CameraUpdateFactory.zoomTo(zoom));
         }
     }
-
 
 
     public void drawRoute(List<List<HashMap<String, String>>> routes) {
@@ -194,20 +178,18 @@ public class MapManager implements OnMapReadyCallback,
             for (int leg = 0; leg < legs.size(); leg++) {
                 String latitude = legs.get(leg).get(this.latitude);
                 String longitude = legs.get(leg).get(this.longitude);
-                points.add(new LatLng(Double.parseDouble(latitude),
-                        Double.parseDouble(longitude)));
+                points.add(new LatLng(Double.parseDouble(latitude), Double.parseDouble(longitude)));
             }
             lineOptions.addAll(points);
         }
-        if(isRequestColor) {
+        if (isRequestColor) {
             lineOptions.color(context.getResources().getColor(R.color.route_available));
             isRequestColor = false;
-        }
-        else {
+        } else {
             lineOptions.color(context.getResources().getColor(R.color.route_between));
         }
         lineOptions.width(widthLine);
-        if(lineOptions.getPoints().size() != 0) {
+        if (lineOptions.getPoints().size() != 0) {
             removeRoute();
             route = googleMap.addPolyline(lineOptions);
             lastRoute = lineOptions;
@@ -217,8 +199,7 @@ public class MapManager implements OnMapReadyCallback,
     public void adjustLocation(Location currentLocation) {
         this.lastLocation = currentLocation;
         if (googleMap != null && currentLocation != null) {
-        LatLng crntLocation = new LatLng(currentLocation.getLatitude(),
-                currentLocation.getLongitude());
+            LatLng crntLocation = new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude());
             if (lastLocation == null || !isFineCameraMove) {
                 createStartPosition(crntLocation);
                 isFineCameraMove = true;
@@ -237,8 +218,7 @@ public class MapManager implements OnMapReadyCallback,
     }
 
     public void changeRadius(Context context) {
-        float radius = sharedPreferenceManager.getValue(context,
-                R.string.settings_file, R.string.setting_radius);
+        float radius = sharedPreferenceManager.getValue(context, R.string.settings_file, R.string.setting_radius);
         if (radius != -1.0) {
             if (circle != null) {
                 circle.setRadius((double) radius);
@@ -248,55 +228,36 @@ public class MapManager implements OnMapReadyCallback,
     }
 
     private CircleOptions getClientCircle(LatLng center) {
-        return new CircleOptions()
-                .center(center)
-                .radius(clientCircleRadius)
-                .fillColor(context.getResources().getColor(R.color.client_circle_fill))
-                .strokeWidth(widthClientCircle)
-                .strokeColor(context.getResources()
-                        .getColor(R.color.client_circle_stroke));
+        return new CircleOptions().center(center).radius(clientCircleRadius).fillColor(context.getResources().getColor(R.color.client_circle_fill)).strokeWidth(widthClientCircle).strokeColor(context.getResources().getColor(R.color.client_circle_stroke));
     }
 
     private CircleOptions getOuterCircle(LatLng center) {
-        return new CircleOptions()
-                .center(center)
-                .radius(defaultCircleRadius)
-                .fillColor(context.getResources().getColor(R.color.outer_circle_fill))
-                .strokeWidth(widthCircle)
-                .strokeColor(context.getResources()
-                        .getColor(R.color.outer_circle_stroke));
+        return new CircleOptions().center(center).radius(defaultCircleRadius).fillColor(context.getResources().getColor(R.color.outer_circle_fill)).strokeWidth(widthCircle).strokeColor(context.getResources().getColor(R.color.outer_circle_stroke));
     }
 
     public void refreshMarker(InfoAccount infoAccount) {
-        markers.get(infoAccount.getIdentifier())
-                .setPosition(new LatLng(infoAccount.getLatitude(),
-                        infoAccount.getLongitude()));
-        infoAccounts.get(infoAccount.getIdentifier())
-                .get(0).setStatus(infoAccount.getStatus());
+        markers.get(infoAccount.getIdentifier()).setPosition(new LatLng(infoAccount.getLatitude(), infoAccount.getLongitude()));
+        infoAccounts.get(infoAccount.getIdentifier()).get(0).setStatus(infoAccount.getStatus());
     }
 
     public void addMarker(InfoAccount infoAccount) {
         if (markers.get(infoAccount.getIdentifier()) == null) {
             MarkerOptions markerOptions = new MarkerOptions();
-            markerOptions.position(new LatLng(infoAccount.getLatitude(),
-                    infoAccount.getLongitude()));
+            markerOptions.position(new LatLng(infoAccount.getLatitude(), infoAccount.getLongitude()));
             Marker marker = googleMap.addMarker(markerOptions);
-            if(infoAccount.getIdentifier() == specialMarkerId){
-                changeMarkerColor(marker, R.drawable.changed_marker);
-            }
-            else{
+            if (infoAccount.getIdentifier() == specialMarkerId) {
                 changeMarkerColor(marker, R.drawable.marker);
+            } else {
+                changeMarkerColor(marker, R.drawable.changed_marker);
             }
             marker.setTag(infoAccount.getIdentifier());
             markers.put(infoAccount.getIdentifier(), marker);
             List<InfoAccount> listInfoAccounts = new LinkedList<>();
             listInfoAccounts.add(infoAccount);
             infoAccounts.put(infoAccount.getIdentifier(), listInfoAccounts);
-            }
-        else {
+        } else {
             boolean result = true;
-            for (InfoAccount infoAccountElement :
-                    infoAccounts.get(infoAccount.getIdentifier())) {
+            for (InfoAccount infoAccountElement : infoAccounts.get(infoAccount.getIdentifier())) {
                 if (infoAccount.equals(infoAccountElement)) {
                     result = false;
                 }
@@ -331,7 +292,7 @@ public class MapManager implements OnMapReadyCallback,
         isBlock = false;
     }
 
-    public int illuminateMarker(int companionId){
+    public int illuminateMarker(int companionId) {
         int result;
         if (markers.get(companionId) != null) {
             isRequestColor = true;
@@ -344,30 +305,29 @@ public class MapManager implements OnMapReadyCallback,
         return result;
     }
 
-    public void buildPossibleRoute(int companionId){
+    public void buildPossibleRoute(int companionId) {
         isRequestColor = true;
         rebuildRoute(companionId);
     }
 
-    public void changeMarkerColorToDefault(int companionId){
+    public void changeMarkerColorToDefault(int companionId) {
         Marker marker;
-        if((marker = markers.get(companionId)) != null){
+        if ((marker = markers.get(companionId)) != null) {
             specialMarkerId = -1;
-            changeMarkerColor(marker, R.drawable.marker);
-        }
-    }
-
-    public void changeMarkerColorToSpecial(int companionId){
-        Marker marker;
-        if((marker = markers.get(companionId)) != null){
-            specialMarkerId = companionId;
             changeMarkerColor(marker, R.drawable.changed_marker);
         }
     }
 
-    private void changeMarkerColor(Marker marker, int drawableResource){
-        Drawable iconDrawable = context.getResources()
-                .getDrawable(drawableResource);
+    public void changeMarkerColorToSpecial(int companionId) {
+        Marker marker;
+        if ((marker = markers.get(companionId)) != null) {
+            specialMarkerId = companionId;
+            changeMarkerColor(marker, R.drawable.marker);
+        }
+    }
+
+    private void changeMarkerColor(Marker marker, int drawableResource) {
+        Drawable iconDrawable = context.getResources().getDrawable(drawableResource);
         BitmapDescriptor icon = getMarkerIconFromDrawable(iconDrawable);
         marker.setIcon(icon);
     }
@@ -390,9 +350,8 @@ public class MapManager implements OnMapReadyCallback,
 
     public void rebuildRoute(int companionId) {
         if (markers.get(companionId) != null) {
-            routeClient.getJSON(new LatLng(lastLocation.getLatitude(),
-                            lastLocation.getLongitude()),
-                    markers.get(companionId).getPosition());
+            System.out.println("CURRENT " + System.currentTimeMillis());
+            routeClient.getJSON(new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude()), markers.get(companionId).getPosition());
         } else {
             if (NetworkClient.companionId > 0) {
                 connectionStateListener.redirectOperation(NetworkClient.COMPANION_IS_OFFLINE);
@@ -403,14 +362,14 @@ public class MapManager implements OnMapReadyCallback,
     @Override
     @SuppressWarnings("all")
     public boolean onMarkerClick(Marker marker) {
-        if(!isBlock || NetworkClient.companionId == (Integer)marker.getTag()) {
+        if (!isBlock || NetworkClient.companionId == (Integer) marker.getTag()) {
             int isCompanion = 0;
-            if(NetworkClient.companionId == (Integer)marker.getTag()){
+            if (NetworkClient.companionId == (Integer) marker.getTag()) {
                 isCompanion = 1;
             }
             android.os.Message message = mainActivityHandler.obtainMessage();
             message.what = InfoWindow.SHOW_INFO_WINDOW;
-            message.obj = getInfoAccounts().get((Integer)marker.getTag());
+            message.obj = getInfoAccounts().get((Integer) marker.getTag());
             message.arg1 = (Integer) marker.getTag();
             message.arg2 = isCompanion;
             mainActivityHandler.sendMessage(message);
@@ -418,19 +377,17 @@ public class MapManager implements OnMapReadyCallback,
         return true;
     }
 
-    private void refreshMap(){
-        if(lastLocation != null) {
-            LatLng currentLocation = new LatLng(lastLocation.getLatitude(),
-                    lastLocation.getLongitude());
+    private void refreshMap() {
+        if (lastLocation != null) {
+            LatLng currentLocation = new LatLng(lastLocation.getLatitude(), lastLocation.getLongitude());
             client = googleMap.addCircle(getClientCircle(currentLocation));
             circle = googleMap.addCircle(getOuterCircle(currentLocation));
             createStartPosition(currentLocation);
         }
-        if(lastRoute != null){
+        if (lastRoute != null) {
             route = googleMap.addPolyline(lastRoute);
         }
-        Map<Integer, List<InfoAccount>> infoAccountsCopy
-                = new TreeMap<>(infoAccounts);
+        Map<Integer, List<InfoAccount>> infoAccountsCopy = new TreeMap<>(infoAccounts);
         infoAccounts.clear();
         markers.clear();
         for (List<InfoAccount> infoAccount : infoAccountsCopy.values()) {
@@ -440,28 +397,19 @@ public class MapManager implements OnMapReadyCallback,
         }
     }
 
-    private void variablesInitialization(final Context context,
-                                         ConnectionStateListener connectionStateListener,
-                                         RouteClient routeClient) {
+    private void variablesInitialization(final Context context, ConnectionStateListener connectionStateListener, RouteClient routeClient) {
         this.routeClient = routeClient;
         this.connectionStateListener = connectionStateListener;
         markers = new TreeMap<>();
         infoAccounts = new TreeMap<>();
         sharedPreferenceManager = new SharedPreferenceManager();
-        lastLocationZoom = context.getResources()
-                .getInteger(R.integer.last_location_zoom);
-        locationZoom = context.getResources()
-                .getInteger(R.integer.location_zoom);
-        defaultCircleRadius = context.getResources()
-                .getInteger(R.integer.default_circle_radius);
-        clientCircleRadius = context.getResources()
-                .getInteger(R.integer.client_circle_radius);
-        widthLine = context.getResources()
-                .getInteger(R.integer.width_line);
-        widthCircle = context.getResources()
-                .getInteger(R.integer.width_circle);
-        widthClientCircle = context.getResources()
-                .getInteger(R.integer.width_client_circle);
+        lastLocationZoom = context.getResources().getInteger(R.integer.last_location_zoom);
+        locationZoom = context.getResources().getInteger(R.integer.location_zoom);
+        defaultCircleRadius = context.getResources().getInteger(R.integer.default_circle_radius);
+        clientCircleRadius = context.getResources().getInteger(R.integer.client_circle_radius);
+        widthLine = context.getResources().getInteger(R.integer.width_line);
+        widthCircle = context.getResources().getInteger(R.integer.width_circle);
+        widthClientCircle = context.getResources().getInteger(R.integer.width_client_circle);
     }
 
 }

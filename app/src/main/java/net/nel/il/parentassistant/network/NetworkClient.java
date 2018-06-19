@@ -1,11 +1,8 @@
 package net.nel.il.parentassistant.network;
 
 import android.content.Context;
-import android.os.Handler;
-import android.os.Message;
 
 import com.google.android.gms.maps.model.LatLng;
-import com.google.gson.Gson;
 
 import net.nel.il.parentassistant.Messaging.Messaging;
 import net.nel.il.parentassistant.interfaces.ConnectionStateListener;
@@ -15,7 +12,6 @@ import net.nel.il.parentassistant.model.OutputAccount;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 public class NetworkClient implements Runnable {
 
@@ -81,9 +77,9 @@ public class NetworkClient implements Runnable {
 
     private Thread thread;
 
-    private long checkDelay = 4000;
+    private long checkDelay = 1000;
 
-    private long requestDelay = 10000;
+    private long requestDelay = 3000;
 
     private boolean routingFrom = false;
 
@@ -109,11 +105,11 @@ public class NetworkClient implements Runnable {
 
     public static final int ROUTE_REBUILDING = 11;
 
-    private final int WAITING_TICKS = 4;
+    private static final int WAITING_TICKS = 9;
 
-    private final int ACCEPTED = 1;
+    private static final int ACCEPTED = 1;
 
-    private final int REJECTED = 0;
+    private static final int REJECTED = 0;
 
     public static final int COMPANION_IS_OFFLINE = 13;
 
@@ -148,6 +144,10 @@ public class NetworkClient implements Runnable {
     private String from;
 
     private String to;
+
+    private int steps = 0;
+
+    private static final int STEPS_AMOUNT = 3;
 
     public NetworkClient(Context context, ConnectionStateListener connectionStateListener,
                          MarkerStateListener markerReceiver, Messaging messaging) {
@@ -354,8 +354,12 @@ public class NetworkClient implements Runnable {
         void rebuildRoute(OutputAccount account){
             if (routingFrom) {
                 if(account.getId() != BREAK_FROM) {
-                    connectionStateListener.redirectRebuildingRoute(ROUTE_REBUILDING,
-                            companionId);
+                    steps++;
+                    if(steps == STEPS_AMOUNT){
+                        steps = 0;
+                        connectionStateListener.redirectRebuildingRoute(ROUTE_REBUILDING,
+                                companionId);
+                    }
 
                 }
             }
@@ -414,9 +418,12 @@ public class NetworkClient implements Runnable {
         void rebuildRoute(OutputAccount account){
             if (routingTo) {
                 if(account.getId() != BREAK_FROM) {
-                    connectionStateListener.redirectRebuildingRoute(ROUTE_REBUILDING,
-                            companionId);
-
+                    steps++;
+                    if(steps == STEPS_AMOUNT) {
+                        steps = 0;
+                        connectionStateListener.redirectRebuildingRoute(ROUTE_REBUILDING,
+                                companionId);
+                    }
                 }
             }
         }

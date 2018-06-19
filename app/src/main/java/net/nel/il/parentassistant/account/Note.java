@@ -14,7 +14,7 @@ public class Note {
 
     String hobbies;
 
-    public Note(){
+    public Note() {
 
     }
 

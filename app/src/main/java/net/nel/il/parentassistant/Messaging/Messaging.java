@@ -42,6 +42,11 @@ public class Messaging {
 
     public void addOuterMessages(OutputAccount outputAccount){
         synchronized (messageBlock) {
+            System.out.print("addOuterMessages ");
+            for(String msg : outputAccount.getMessages()){
+                System.out.print(msg + " ");
+            }
+            System.out.println();
             outerMessages.addAll(outputAccount.getMessages());
             for(String message : outputAccount.getMessages()){
                 messages.add(new Message(message, false, System.currentTimeMillis()));

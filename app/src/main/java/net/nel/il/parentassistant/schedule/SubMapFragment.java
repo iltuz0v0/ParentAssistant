@@ -4,13 +4,11 @@ package net.nel.il.parentassistant.schedule;
 import android.app.Fragment;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
-import android.graphics.Color;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -25,7 +23,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
-import com.google.android.gms.maps.model.PolygonOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
 
@@ -34,9 +31,7 @@ import net.nel.il.parentassistant.R;
 import java.util.ArrayList;
 import java.util.List;
 
-public class SubMapFragment extends
-        Fragment implements OnMapReadyCallback, View.OnClickListener,
-        GoogleMap.OnMapClickListener, GoogleMap.OnMarkerDragListener{
+public class SubMapFragment extends Fragment implements OnMapReadyCallback, View.OnClickListener, GoogleMap.OnMapClickListener, GoogleMap.OnMarkerDragListener {
 
     private static final float Z_INDEX = 100.0f;
 
@@ -77,7 +72,7 @@ public class SubMapFragment extends
 
     @Override
     public void onMarkerDrag(Marker marker) {
-        if(polyline != null){
+        if (polyline != null) {
             polyline.remove();
         }
         drawRectangle(firstClick, marker.getPosition());
@@ -89,16 +84,17 @@ public class SubMapFragment extends
         acceptionContainer.setVisibility(View.VISIBLE);
     }
 
-    public interface MapLocationCallback{
+    public interface MapLocationCallback {
         Location getLocation();
+
         void setLocation(List<LatLng> points);
     }
 
     @Override
     public void onClick(View v) {
-        switch (v.getId()){
+        switch (v.getId()) {
             case R.id.locat:
-                if(mapLocationCallback != null) {
+                if (mapLocationCallback != null) {
                     moveCameraToPosition(mapLocationCallback.getLocation(), ZOOM);
                 }
                 break;
@@ -114,11 +110,11 @@ public class SubMapFragment extends
     @Override
     public void onMapClick(LatLng latLng) {
         acceptionContainer.setVisibility(View.INVISIBLE);
-        if(pointOne == null || pointTwo == null) {
-            if(marker != null){
+        if (pointOne == null || pointTwo == null) {
+            if (marker != null) {
                 marker.remove();
             }
-            if(polyline != null){
+            if (polyline != null) {
                 polyline.remove();
             }
             MarkerOptions markerOptions = new MarkerOptions();
@@ -131,29 +127,23 @@ public class SubMapFragment extends
     }
 
 
-
     public SubMapFragment() {
 
     }
 
-    private void drawRectangle(LatLng firstClick, LatLng secondClick){
+    private void drawRectangle(LatLng firstClick, LatLng secondClick) {
         PolylineOptions polylineOptions = new PolylineOptions();
-        polylineOptions.add(firstClick, new LatLng(firstClick.latitude,
-                secondClick.longitude), secondClick,
-                new LatLng(secondClick.latitude, firstClick.longitude),
-                firstClick);
+        polylineOptions.add(firstClick, new LatLng(firstClick.latitude, secondClick.longitude), secondClick, new LatLng(secondClick.latitude, firstClick.longitude), firstClick);
         polylineOptions.width(LINE_WIDTH);
-        polylineOptions.color(getActivity()
-                .getResources().getColor(R.color.route_between));
+        polylineOptions.color(getActivity().getResources().getColor(R.color.route_between));
         polyline = googleMap.addPolyline(polylineOptions);
     }
 
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_sub_map, container, false);
-        if(pointOne == null && pointTwo == null) {
+        if (pointOne == null && pointTwo == null) {
             location = (FloatingActionButton) view.findViewById(R.id.locat);
             location.setOnClickListener(this);
             view.setZ(Z_INDEX);
@@ -163,8 +153,7 @@ public class SubMapFragment extends
             rejection = (Button) view.findViewById(R.id.rejection);
             rejection.setOnClickListener(this);
         }
-        map = (MapFragment) getChildFragmentManager()
-                .findFragmentById(R.id.mapFr);
+        map = (MapFragment) getChildFragmentManager().findFragmentById(R.id.mapFr);
         map.getMapAsync(this);
         return view;
     }
@@ -174,45 +163,41 @@ public class SubMapFragment extends
         this.googleMap = googleMap;
         googleMap.setOnMarkerDragListener(this);
         googleMap.setOnMapClickListener(this);
-        if(pointOne == null || pointTwo == null) {
-            if(mapLocationCallback != null) {
+        if (pointOne == null || pointTwo == null) {
+            if (mapLocationCallback != null) {
                 Location location = mapLocationCallback.getLocation();
                 moveCameraToPosition(location, ZOOM);
             }
-        }
-        else {
+        } else {
             moveCameraToPosition(getCenterLatLng(pointOne, pointTwo), ZOOM);
             drawRectangle(pointOne, pointTwo);
         }
     }
 
-    private LatLng getCenterLatLng(LatLng pointOne, LatLng pointTwo){
-        return new LatLng((pointOne.latitude + pointTwo.latitude)/2,
-                (pointOne.longitude + pointTwo.longitude)/2);
+    private LatLng getCenterLatLng(LatLng pointOne, LatLng pointTwo) {
+        return new LatLng((pointOne.latitude + pointTwo.latitude) / 2, (pointOne.longitude + pointTwo.longitude) / 2);
     }
 
-    public void setReference(ScheduleFragment scheduleFragment){
+    public void setReference(ScheduleFragment scheduleFragment) {
         mapLocationCallback = (MapLocationCallback) scheduleFragment;
     }
 
-    private void moveCameraToPosition(Location currentLocation, int zoom){
-        if(googleMap != null && currentLocation != null) {
-            googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(
-                    currentLocation.getLatitude(), currentLocation.getLongitude())));
+    private void moveCameraToPosition(Location currentLocation, int zoom) {
+        if (googleMap != null && currentLocation != null) {
+            googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(currentLocation.getLatitude(), currentLocation.getLongitude())));
             googleMap.moveCamera(CameraUpdateFactory.zoomTo(zoom));
         }
     }
 
-    private void moveCameraToPosition(LatLng currentLocation, int zoom){
-        if(googleMap != null && currentLocation != null) {
-            googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(
-                    currentLocation.latitude, currentLocation.longitude)));
+    private void moveCameraToPosition(LatLng currentLocation, int zoom) {
+        if (googleMap != null && currentLocation != null) {
+            googleMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(currentLocation.latitude, currentLocation.longitude)));
             googleMap.moveCamera(CameraUpdateFactory.zoomTo(zoom));
         }
     }
 
-    private void acception(){
-        if(mapLocationCallback != null){
+    private void acception() {
+        if (mapLocationCallback != null) {
             List<LatLng> points = new ArrayList<>();
             points.add(firstClick);
             points.add(secondClick);
@@ -221,24 +206,23 @@ public class SubMapFragment extends
         getFragmentManager().popBackStack();
     }
 
-    private void rejection(){
+    private void rejection() {
         acceptionContainer.setVisibility(View.INVISIBLE);
-        if(polyline != null){
+        if (polyline != null) {
             polyline.remove();
         }
-        if(marker != null){
+        if (marker != null) {
             marker.remove();
         }
     }
 
-    public void setPoints(LatLng pointOne, LatLng pointTwo){
+    public void setPoints(LatLng pointOne, LatLng pointTwo) {
         this.pointOne = pointOne;
         this.pointTwo = pointTwo;
     }
 
-    private void changeMarkerColor(MarkerOptions markerOptions, int drawableResource){
-        Drawable iconDrawable = getActivity().getResources()
-                .getDrawable(drawableResource);
+    private void changeMarkerColor(MarkerOptions markerOptions, int drawableResource) {
+        Drawable iconDrawable = getActivity().getResources().getDrawable(drawableResource);
         BitmapDescriptor icon = getMarkerIconFromDrawable(iconDrawable);
         markerOptions.icon(icon);
     }

@@ -1,8 +1,5 @@
 package net.nel.il.parentassistant.main;
 
-import android.os.Handler;
-import android.os.Message;
-
 import com.google.android.gms.maps.model.LatLng;
 import com.google.maps.android.PolyUtil;
 
